@@ -1,0 +1,35 @@
+services:
+  db:
+    image: mysql:8.0
+    container_name: frota_db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: frota_db
+      MYSQL_USER: user
+      MYSQL_PASSWORD: root
+    ports:
+      - '3306:3306'
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  backend:
+    build: .
+    container_name: frota_backend
+    restart: always
+    ports:
+      - '5000:5000'
+    environment:
+      NODE_ENV: development
+      DB_HOST: db
+      DB_USER: user
+      DB_PASSWORD: password
+      DB_NAME: frota_db
+    volumes:
+      - ./src:/app/src # Monta o código fonte no container
+    command: npm run dev # Roda o projeto em modo de desenvolvimento
+    depends_on:
+      - db
+
+volumes:
+  mysql_data:
