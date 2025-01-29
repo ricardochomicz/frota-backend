@@ -1,10 +1,12 @@
 -- Tabela de veículos
 CREATE TABLE IF NOT EXISTS vehicles (
   id INT AUTO_INCREMENT PRIMARY KEY,
+  brand VARCHAR(255) NOT NULL,
   model VARCHAR(255) NOT NULL,
   year INT NOT NULL,
   license_plate VARCHAR(20) NOT NULL UNIQUE,
   mileage INT NOT NULL,
+  fuel_type ENUM('gasoline', 'diesel', 'electric', 'hybrid') NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
