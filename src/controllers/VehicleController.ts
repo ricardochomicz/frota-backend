@@ -57,6 +57,13 @@ class VehicleController {
     static async getByLicensePlate(req: Request, res: Response): Promise<void> {
         try {
             const { license_plate } = req.params;  // Placa do veículo a ser buscado
+
+            //Validação da entrada (exemplo simples)
+            if (!/^[A-Z]{3}-\d{4}$/.test(license_plate)) {
+                res.status(400).json({ error: 'Placa inválida (Formato: AAA-1234)' });
+                return;
+            }
+
             const vehicle = await Vehicle.getByLicensePlate(license_plate);  // Busca o veículo no banco de dados
             if (!vehicle) {
                 res.status(404).json({ error: 'Veículo não encontrado' });

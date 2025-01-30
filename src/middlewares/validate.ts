@@ -1,5 +1,9 @@
 import { Request, Response, NextFunction } from "express";
-import { ZodSchema } from "zod";
+import { z, ZodSchema } from "zod";
+
+export const vehicleLicensePlateSchema = z.object({
+    license_plate: z.string().regex(/^[A-Z]{3}-\d{4}$/, { message: "Placa inválida (Formato: AAA-1234)" }),
+});
 
 export const validate = (schema: ZodSchema<any>) =>
     (req: Request, res: Response, next: NextFunction): void => {
