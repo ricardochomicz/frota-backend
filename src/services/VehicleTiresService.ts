@@ -3,7 +3,7 @@ import IVehicleTires from "../models/VehicleTires";
 
 class VehicleTiresService {
 
-    static async create(vehicleTires: IVehicleTires): Promise<{ id: number }> {
+    static async create(vehicleTires: IVehicleTires, user_id: number): Promise<{ id: number }> {
         const { vehicle_id, tire_id, installation_date, mileage_at_installation, predicted_replacement_mileage } = vehicleTires;
         const query = `INSERT INTO vehicle_tires (vehicle_id, tire_id, installation_date, mileage_at_installation, predicted_replacement_mileage) VALUES (?, ?, ?, ?, ?)`;
         try {

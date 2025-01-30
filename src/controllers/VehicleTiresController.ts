@@ -7,6 +7,10 @@ class VehicleTiresController {
 
     static async create(req: Request, res: Response): Promise<void> {
         try {
+            if (!req.user) {
+                res.status(401).json({ error: "Usuário não autenticado" });
+                return;
+            }
             // Validação da entrada
             const vehicleTires = vehicleTiresSchema.parse(req.body);
 
@@ -18,7 +22,7 @@ class VehicleTiresController {
             }
 
             // Criação do veículo no banco de dados
-            const result = await VehicleTiresService.create(vehicleTires);
+            const result = await VehicleTiresService.create(vehicleTires, req.user.userId);
             res.status(201).json({ message: 'Pneu adicionado ao veículo com sucesso', data: result });
 
         } catch (err: any) {

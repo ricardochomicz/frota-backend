@@ -6,6 +6,10 @@ import { vehicleSchema } from '../schemas/VehicleSchema';
 class VehicleController {
     static async create(req: Request, res: Response): Promise<void> {
         try {
+            if (!req.user) {
+                res.status(401).json({ error: "Usuário não autenticado" });
+                return;
+            }
             // Validação da entrada
             const vehicle = vehicleSchema.parse(req.body);
 
@@ -17,7 +21,7 @@ class VehicleController {
             }
 
             // Criação do veículo no banco de dados
-            const result = await VehicleService.create(vehicle);
+            const result = await VehicleService.create(vehicle, req.user.userId);
             res.status(201).json({ message: 'Veículo criado com sucesso', data: result });
 
         } catch (err: any) {

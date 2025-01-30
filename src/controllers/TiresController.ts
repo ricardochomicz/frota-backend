@@ -6,7 +6,12 @@ import TiresService from "../services/TiresService";
 class TiresController {
 
     static async create(req: Request, res: Response): Promise<void> {
+        console.log(req.user);
         try {
+            if (!req.user) {
+                res.status(401).json({ error: "Usuário não autenticado" });
+                return;
+            }
             // Validação da entrada
             const tires = tiresSchema.parse(req.body);
 
@@ -18,7 +23,7 @@ class TiresController {
             }
 
             // Criação do pneu no banco de dados
-            const result = await TiresService.create(tires);
+            const result = await TiresService.create(tires, req.user.userId);
             res.status(201).json({ message: 'Pneu cadastrado com sucesso', data: result });
 
         } catch (err: any) {

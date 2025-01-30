@@ -6,6 +6,14 @@ import UserService from '../services/UserService';
 class UserController {
     static async create(req: Request, res: Response): Promise<void> {
         const { name, email, password_hash, role } = req.body;
+
+        // Verifica se o usuário já existe
+        const existingUser = await UserService.findByEmail(email);
+        if (existingUser) {
+            res.status(400).json({ error: 'Email já está em uso' });
+            return;
+        }
+
         try {
             await UserService.create({ name, email, password_hash, role });
             res.status(201).json({ message: 'Usuário criado com sucesso' });

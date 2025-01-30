@@ -1,5 +1,7 @@
 import db from '../config/db';
 import ITires from "../models/Tires";
+import { getAuthenticatedUser } from '../auth/generateAndVerifyToken';
+import { Request } from 'express';
 
 class TiresService {
 
@@ -8,13 +10,14 @@ class TiresService {
  * @param vehicle Dados do pneu
  * @returns Retorna o ID do pneu inserido
  */
-    static async create(tires: ITires): Promise<{ id: number }> {
+    static async create(tires: ITires, user_id: number): Promise<{ id: number }> {
+
         const { code, brand, model, price } = tires;
 
-        const query = `INSERT INTO tires (code, brand, model, price) VALUES (?, ?, ?, ?)`;
+        const query = `INSERT INTO tires (code, brand, model, price, user_id) VALUES (?, ?, ?, ?, ?)`;
 
         try {
-            const [result]: any = await db.promise().query(query, [code, brand, model, price]);
+            const [result]: any = await db.promise().query(query, [code, brand, model, price, user_id]);
             return { id: result.insertId };
         } catch (error) {
             throw new Error('Erro ao criar pneus. Tente novamente mais tarde.');
