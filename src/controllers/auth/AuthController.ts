@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import User from '../../models/User';
-import { generateToken } from '../../auth/auth';
+import { generateToken } from '../../auth/generateAndVerifyToken';
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 import { loginSchema } from '../../schemas/auth/LoginSchema';
@@ -63,10 +63,10 @@ class AuthController {
             res.status(200).json({ message: 'Login bem-sucedido', token });
 
         } catch (err: any) {
-            // if (err instanceof z.ZodError) {
-            //     res.status(400).json({ error: 'Dados inválidos', details: err.errors });
+            if (err instanceof z.ZodError) {
+                res.status(400).json({ error: 'Dados inválidos', details: err.errors });
 
-            // }
+            }
             console.error('[ERRO] Falha ao fazer login:', err);
             res.status(500).json({ error: 'Erro ao fazer login', details: err.message });
 
