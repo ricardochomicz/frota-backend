@@ -1,8 +1,8 @@
 import express from 'express';
 import VehicleController from '../controllers/VehicleController';
-import { validate } from '../middlewares/validate';
+import { validate } from '../middlewares/Validate';
 import { vehicleSchema } from '../schemas/VehicleSchema';
-import { authMiddleware } from '../middlewares/authMiddleware';
+import { authMiddleware } from '../middlewares/AuthMiddleware';
 
 const router = express.Router();
 
@@ -35,6 +35,13 @@ router.get('/vehicles/license_plate/:license_plate', authMiddleware, VehicleCont
  * @description Atualiza um veículo pelo ID
  */
 router.put('/vehicles/:id', authMiddleware, validate(vehicleSchema), VehicleController.update);
+
+
+/**
+ * @route DELETE /vehicles/:id
+ * @description Deleta um veículo pelo ID
+ */
+router.delete('/vehicles/:id', authMiddleware, VehicleController.delete);
 
 
 

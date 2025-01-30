@@ -12,15 +12,26 @@ CREATE TABLE IF NOT EXISTS vehicles (
 );
 
 -- Tabela de pneus
+-- CREATE TABLE IF NOT EXISTS tires (
+--   id INT AUTO_INCREMENT PRIMARY KEY,
+--   vehicle_id INT NOT NULL,
+--   code VARCHAR(50) NOT NULL,
+--   installation_date DATE NOT NULL,
+--   mileage_at_installation INT NOT NULL,
+--   predicted_replacement_mileage INT NOT NULL,
+--   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+--   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+--   FOREIGN KEY (vehicle_id) REFERENCES vehicles(id) ON DELETE CASCADE
+-- );
+
 CREATE TABLE IF NOT EXISTS tires (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  vehicle_id INT NOT NULL,
-  installation_date DATE NOT NULL,
-  mileage_at_installation INT NOT NULL,
-  predicted_replacement_mileage INT NOT NULL,
+  code VARCHAR(50) NOT NULL,
+  brand VARCHAR(255) NOT NULL,
+  model VARCHAR(255) NOT NULL,
+  price DECIMAL(10, 2) NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  FOREIGN KEY (vehicle_id) REFERENCES vehicles(id) ON DELETE CASCADE
 );
 
 -- Tabela de manutenção

@@ -1,6 +1,7 @@
 import express from 'express';
-import vehicleRoutes from './routes/vehicleRoutes';
-import userRoutes from './routes/userRoutes';
+import vehicleRoutes from './routes/VehicleRoutes';
+import tireRoutes from './routes/TiresRoutes';
+import userRoutes from './routes/UserRoutes';
 import AuthController from './controllers/auth/AuthController';
 
 const app = express();
@@ -20,6 +21,9 @@ app.post('/login', AuthController.login);
 
 // Rotas Veículos
 app.use('/api', vehicleRoutes);
+
+// Rotas Pneus
+app.use('/api', tireRoutes);
 
 // Rotas Usuários
 app.use('/api', userRoutes);

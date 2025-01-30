@@ -16,7 +16,6 @@ class VehicleService {
             const [result]: any = await db.promise().query(query, [brand, model, year, license_plate, mileage, fuel_type]);
             return { id: result.insertId };
         } catch (error) {
-            console.error('[ERRO] Falha ao criar veículo:', error);
             throw new Error('Erro ao criar veículo. Tente novamente mais tarde.');
         }
     }
@@ -33,7 +32,6 @@ class VehicleService {
             const [rows]: any = await db.promise().query(query, [licensePlate]);
             return rows[0] || null;
         } catch (error) {
-            console.error('[ERRO] Falha ao buscar veículos:', error);
             throw new Error('Erro ao buscar veículos. Tente novamente mais tarde.');
         }
     }
@@ -50,7 +48,6 @@ class VehicleService {
             const [rows]: any = await db.promise().query(query);
             return rows;
         } catch (error) {
-            console.error('[ERRO] Falha ao buscar veículos:', error);
             throw new Error('Erro ao buscar veículos. Tente novamente mais tarde.');
         }
     }
@@ -67,7 +64,6 @@ class VehicleService {
             const [rows]: any = await db.promise().query(query, [id]);
             return rows[0] || null;
         } catch (error) {
-            console.error('[ERRO] Falha ao buscar veículos:', error);
             throw new Error('Erro ao buscar veículos. Tente novamente mais tarde.');
         }
     }
@@ -85,8 +81,17 @@ class VehicleService {
         try {
             await db.promise().query(query, [brand, model, year, license_plate, mileage, fuel_type, id]);
         } catch (error) {
-            console.error('[ERRO] Falha ao atualizar veículo:', error);
             throw new Error('Erro ao atualizar veículo. Tente novamente mais tarde.');
+        }
+    }
+
+    static async delete(id: number): Promise<void> {
+        const query = `DELETE FROM vehicles WHERE id = ?`;
+
+        try {
+            await db.promise().query(query, [id]);
+        } catch (error) {
+            throw new Error('Erro ao deletar veículo. Tente novamente mais tarde.');
         }
     }
 }

@@ -24,7 +24,6 @@ class VehicleController {
             if (err.name === "ZodError") {
                 res.status(400).json({ error: 'Erro de validação', details: err.errors });
             }
-            console.error('[ERRO] Falha ao criar veículo:', err);
             res.status(500).json({ error: 'Erro interno', details: err.message });
         }
     }
@@ -34,7 +33,6 @@ class VehicleController {
             const vehicles = await VehicleService.getAll();    // Busca todos os veículos no banco de dados
             res.status(200).json({ data: vehicles });
         } catch (err: any) {
-            console.error('[ERRO] Falha ao buscar veículos:', err);
             res.status(500).json({ error: 'Erro ao buscar veículos', details: err.message });
         }
     }
@@ -49,7 +47,6 @@ class VehicleController {
             }
             res.status(200).json({ message: 'Veículo encontrado', data: vehicle });
         } catch (err: any) {
-            console.error('[ERRO] Falha ao buscar veículo:', err);
             res.status(500).json({ error: 'Erro ao buscar veículo', details: err.message });
         }
     }
@@ -71,7 +68,6 @@ class VehicleController {
             }
             res.status(200).json({ message: 'Veículo encontrado', data: vehicle });
         } catch (err: any) {
-            console.error('[ERRO] Falha ao buscar veículo:', err);
             res.status(500).json({ error: 'Erro ao buscar veículo', details: err.message });
         }
     }
@@ -87,8 +83,22 @@ class VehicleController {
             if (err.name === "ZodError") {
                 res.status(400).json({ error: 'Erro de validação', details: err.errors });
             }
-            console.error('[ERRO] Falha ao atualizar veículo:', err);
             res.status(500).json({ error: 'Erro interno', details: err.message });
+        }
+    }
+
+    /**
+     * 
+     * @param req ID do veículo a ser excluído
+     * 
+     */
+    static async delete(req: Request, res: Response): Promise<void> {
+        try {
+            const { id } = req.params;  // ID do veículo a ser excluído
+            await VehicleService.delete(Number(id));  // Exclui o veículo no banco de dados
+            res.status(200).json({ message: 'Veículo excluído com sucesso' });
+        } catch (err: any) {
+            res.status(500).json({ error: 'Erro ao excluir veículo', details: err.message });
         }
     }
 }
