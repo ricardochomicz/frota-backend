@@ -1,10 +1,10 @@
 import { Request, Response } from 'express';
-import User from '../../models/User';
 import { generateToken } from '../../auth/generateAndVerifyToken';
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 import { loginSchema } from '../../schemas/auth/LoginSchema';
 import { registerSchema } from '../../schemas/auth/RegisterSchema';
+import UserService from '../../services/UserService';
 
 class AuthController {
     // Registro de usuário
@@ -14,14 +14,14 @@ class AuthController {
             const { name, email, password_hash, role } = registerSchema.parse(req.body);
 
             // Verifica se o usuário já existe
-            const existingUser = await User.findByEmail(email);
+            const existingUser = await UserService.findByEmail(email);
             if (existingUser) {
                 res.status(400).json({ error: 'Email já está em uso' });
                 return;
             }
 
             // Cria o usuário no banco de dados
-            await User.create({ name, email, password_hash, role });
+            await UserService.create({ name, email, password_hash, role });
 
             res.status(201).json({ message: 'Usuário criado com sucesso' });
             return;
@@ -44,13 +44,18 @@ class AuthController {
             const { email, password_hash } = loginSchema.parse(req.body);
 
             // Busca o usuário no banco de dados
-            const user = await User.findByEmail(email);
+            const user = await UserService.findByEmail(email);
             if (!user || !(await bcrypt.compare(password_hash, user.password_hash))) {
                 res.status(401).json({ error: 'Credenciais inválidas' });
                 return;
             }
 
-            // Gera o token JWT
+            // 🔥 Certifique-se de que user.id é um número válido
+            if (!user.id) {
+                res.status(500).json({ error: 'Erro interno: usuário sem ID' });
+                return;
+            }
+
             const token = generateToken(user.id, user.role);
             res.status(200).json({ message: 'Login bem-sucedido', token });
 

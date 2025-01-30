@@ -1,12 +1,12 @@
 import { Request, Response } from 'express';
-import User from "../models/User";
+import UserService from '../services/UserService';
 
 
 
 class UserController {
     static async getAll(req: Request, res: Response): Promise<void> {
         try {
-            const users = await User.getAll();    // Busca todos os usuários no banco de dados
+            const users = await UserService.getAll();    // Busca todos os usuários no banco de dados
             res.status(200).json({ message: 'Usuários encontrados', data: users });
         } catch (err: any) {
             console.error('[ERRO] Falha ao buscar usuários:', err);
