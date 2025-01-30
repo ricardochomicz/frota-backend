@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import Vehicle from '../models/Vehicle';
+import VehicleService from '../services/VehicleService';
 import { vehicleSchema } from '../schemas/VehicleSchema';
 
 
@@ -10,14 +10,14 @@ class VehicleController {
             const vehicle = vehicleSchema.parse(req.body);
 
             //Verifica se o veículo já existe
-            const vehicleExists = await Vehicle.getByLicensePlate(vehicle.license_plate);
+            const vehicleExists = await VehicleService.getByLicensePlate(vehicle.license_plate);
             if (vehicleExists) {
                 res.status(400).json({ error: 'Veículo ja cadastrado' });
                 return;
             }
 
             // Criação do veículo no banco de dados
-            const result = await Vehicle.create(vehicle);
+            const result = await VehicleService.create(vehicle);
             res.status(201).json({ message: 'Veículo criado com sucesso', data: result });
 
         } catch (err: any) {
@@ -31,8 +31,8 @@ class VehicleController {
 
     static async getAll(req: Request, res: Response): Promise<void> {
         try {
-            const vehicles = await Vehicle.getAll();    // Busca todos os veículos no banco de dados
-            res.status(200).json({ message: 'Veículos encontrados', data: vehicles });
+            const vehicles = await VehicleService.getAll();    // Busca todos os veículos no banco de dados
+            res.status(200).json({ data: vehicles });
         } catch (err: any) {
             console.error('[ERRO] Falha ao buscar veículos:', err);
             res.status(500).json({ error: 'Erro ao buscar veículos', details: err.message });
@@ -42,7 +42,7 @@ class VehicleController {
     static async getById(req: Request, res: Response): Promise<void> {
         try {
             const { id } = req.params;  // ID do veículo a ser buscado
-            const vehicle = await Vehicle.getById(Number(id));  // Busca o veículo no banco de dados
+            const vehicle = await VehicleService.getById(Number(id));  // Busca o veículo no banco de dados
             if (!vehicle) {
                 res.status(404).json({ error: 'Veículo não encontrado' });
                 return;
@@ -64,7 +64,7 @@ class VehicleController {
                 return;
             }
 
-            const vehicle = await Vehicle.getByLicensePlate(license_plate);  // Busca o veículo no banco de dados
+            const vehicle = await VehicleService.getByLicensePlate(license_plate);  // Busca o veículo no banco de dados
             if (!vehicle) {
                 res.status(404).json({ error: 'Veículo não encontrado' });
                 return;
@@ -81,7 +81,7 @@ class VehicleController {
             const { id } = req.params;  // ID do veículo a ser atualizado
             const vehicle = vehicleSchema.parse(req.body);  // Dados atualizados do veículo
 
-            await Vehicle.update(Number(id), vehicle);  // Atualiza o veículo no banco de dados
+            await VehicleService.update(Number(id), vehicle);  // Atualiza o veículo no banco de dados
             res.status(200).json({ message: 'Veículo atualizado com sucesso' });
         } catch (err: any) {
             if (err.name === "ZodError") {

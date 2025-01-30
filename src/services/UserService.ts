@@ -44,7 +44,7 @@ class UserService {
 
     static async getAll(): Promise<IUser[]> {
         try {
-            const [rows]: any = await db.promise().query('SELECT * FROM users');
+            const [rows]: any = await db.promise().query('SELECT id, name, email, role, created_at, updated_at FROM users');
             return rows;
         } catch (error) {
             console.error('[ERRO] Falha ao buscar usuários:', error);
