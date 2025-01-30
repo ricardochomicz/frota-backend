@@ -15,7 +15,9 @@ class MaintenanceController {
 
             const maintenance = maintenanceSchema.parse(req.body);
             const result = await MaintenanceService.create(maintenance, req.user.userId);
-            res.status(201).json({ message: 'Manutenção cadastrada com sucesso', data: result });
+
+            const maintenanceDetails = await MaintenanceService.getMaintenanceWithVehicle(result.id);
+            res.status(201).json({ message: 'Manutenção cadastrada com sucesso', data: maintenanceDetails });
         } catch (err: any) {
             if (err.name === "ZodError") {
                 res.status(400).json({ error: 'Erro de validação', details: err.errors });
@@ -30,6 +32,38 @@ class MaintenanceController {
             res.status(200).json({ data: maintenances });
         } catch (err: any) {
             res.status(500).json({ error: 'Erro ao buscar manutenções', details: err.message });
+        }
+    }
+
+    static async get(req: Request, res: Response): Promise<void> {
+        try {
+            const { id } = req.params;
+            const maintenance = await MaintenanceService.get(Number(id));
+            if (!maintenance) {
+                res.status(404).json({ error: 'Manutenção não encontrada' });
+                return;
+            }
+            res.status(200).json({ data: maintenance });
+        } catch (err: any) {
+            res.status(500).json({ error: 'Erro ao buscar manutenção', details: err.message });
+        }
+    }
+
+    static async update(req: Request, res: Response): Promise<void> {
+        try {
+            if (!req.user) {
+                res.status(401).json({ error: "Usuário não autenticado" });
+                return;
+            }
+            const { id } = req.params;
+            const maintenance = maintenanceSchema.parse(req.body);
+            const result = await MaintenanceService.update(Number(id), maintenance, req.user.userId);
+            res.status(200).json({ message: 'Manutenção atualizada com sucesso', data: result });
+        } catch (err: any) {
+            if (err.name === "ZodError") {
+                res.status(400).json({ error: 'Erro de validação', details: err.errors });
+            }
+            res.status(500).json({ error: 'Erro ao atualizar manutenção', details: err.message });
         }
     }
 }
