@@ -22,7 +22,7 @@ router.get('/vehicles', authMiddleware, VehicleController.getAll);
  * @route GET /vehicles/:id
  * @description Busca um veículo pelo ID
  */
-router.get('/vehicles/:id', authMiddleware, VehicleController.getById);
+router.get('/vehicles/:id', authMiddleware, VehicleController.get);
 
 /**
  * @route GET /vehicles/license_plate/:license_plate

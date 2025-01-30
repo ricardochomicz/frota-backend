@@ -23,7 +23,7 @@ router.get('/tires', authMiddleware, TireController.getAll);
  * @route GET /tires/:id
  * @description Busca um pneu pelo ID
  */
-router.get('/tires/:id', authMiddleware, TireController.getById);
+router.get('/tires/:id', authMiddleware, TireController.get);
 
 /**
  * @route GET /tires/code/:code

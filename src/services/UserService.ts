@@ -1,7 +1,7 @@
 // services/UserService.ts
 import db from '../config/db';
 import bcrypt from 'bcryptjs';
-import IUser from '../models/User';
+import { IUser, IUserUpdate } from '../models/User';
 
 class UserService {
     static async create(user: IUser): Promise<void> {
@@ -49,6 +49,23 @@ class UserService {
         } catch (error) {
             console.error('[ERRO] Falha ao buscar usuários:', error);
             throw new Error('Erro ao buscar usuários.');
+        }
+    }
+
+    static async get(id: number): Promise<IUser | null> {
+        try {
+            const [rows]: any = await db.promise().query('SELECT id, name, email, role, created_at, updated_at FROM users WHERE id = ?', [id]);
+            return rows[0] || null;
+        } catch (error) {
+            throw new Error('Erro ao buscar usuário.');
+        }
+    }
+
+    static async update(id: number, user: IUserUpdate): Promise<void> {
+        try {
+            await db.promise().query('UPDATE users SET name = ?, email = ?, role = ? WHERE id = ?', [user.name, user.email, user.role, id]);
+        } catch (error) {
+            throw new Error('Erro ao atualizar usuário.');
         }
     }
 }

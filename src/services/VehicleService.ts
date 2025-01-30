@@ -57,7 +57,7 @@ class VehicleService {
      * @param id ID do veículo
      * @returns IVehicle
      */
-    static async getById(id: number): Promise<IVehicle | null> {
+    static async get(id: number): Promise<IVehicle | null> {
         const query = `SELECT * FROM vehicles WHERE id = ?`;
 
         try {
@@ -67,6 +67,8 @@ class VehicleService {
             throw new Error('Erro ao buscar veículos. Tente novamente mais tarde.');
         }
     }
+
+
 
     /**
      * Atualiza um veículo no banco de dados.

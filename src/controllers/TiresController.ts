@@ -4,6 +4,7 @@ import TiresService from "../services/TiresService";
 
 
 class TiresController {
+
     static async create(req: Request, res: Response): Promise<void> {
         try {
             // Validação da entrada
@@ -37,10 +38,10 @@ class TiresController {
         }
     }
 
-    static async getById(req: Request, res: Response): Promise<void> {
+    static async get(req: Request, res: Response): Promise<void> {
         try {
             const { id } = req.params;
-            const tires = await TiresService.getById(Number(id));
+            const tires = await TiresService.get(Number(id));
             if (!tires) {
                 res.status(404).json({ error: 'Pneu não encontrado' });
                 return;
@@ -60,20 +61,6 @@ class TiresController {
                 return;
             }
             res.status(200).json({ data: tires });
-        } catch (err: any) {
-            res.status(500).json({ error: 'Erro ao buscar pneu', details: err.message });
-        }
-    }
-
-    static async getTiresByVehicleId(req: Request, res: Response): Promise<void> {
-        try {
-            const { vehicle_id } = req.params;
-            const tires = await TiresService.getTiresByVehicleId(Number(vehicle_id));
-            if (!tires) {
-                res.status(404).json({ error: 'Pneu não encontrado' });
-                return;
-            }
-            res.status(200).json({ message: 'Pneu encontrado', data: tires });
         } catch (err: any) {
             res.status(500).json({ error: 'Erro ao buscar pneu', details: err.message });
         }

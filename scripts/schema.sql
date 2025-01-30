@@ -34,6 +34,19 @@ CREATE TABLE IF NOT EXISTS tires (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 );
 
+CREATE TABLE IF NOT EXISTS vehicle_tires (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  vehicle_id INT NOT NULL,               
+  tire_id INT NOT NULL,                  
+  installation_date DATE NOT NULL,       
+  mileage_at_installation INT NOT NULL,  
+  predicted_replacement_mileage INT NOT NULL, 
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (vehicle_id) REFERENCES vehicles(id) ON DELETE CASCADE,
+  FOREIGN KEY (tire_id) REFERENCES tires(id) ON DELETE CASCADE
+);
+
 -- Tabela de manutenção
 CREATE TABLE IF NOT EXISTS maintenance (
   id INT AUTO_INCREMENT PRIMARY KEY,

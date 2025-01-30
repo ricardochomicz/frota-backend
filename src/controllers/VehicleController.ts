@@ -37,10 +37,10 @@ class VehicleController {
         }
     }
 
-    static async getById(req: Request, res: Response): Promise<void> {
+    static async get(req: Request, res: Response): Promise<void> {
         try {
             const { id } = req.params;  // ID do veículo a ser buscado
-            const vehicle = await VehicleService.getById(Number(id));  // Busca o veículo no banco de dados
+            const vehicle = await VehicleService.get(Number(id));  // Busca o veículo no banco de dados
             if (!vehicle) {
                 res.status(404).json({ error: 'Veículo não encontrado' });
                 return;

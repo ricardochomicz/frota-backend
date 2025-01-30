@@ -41,7 +41,7 @@ class TiresService {
      * @param id ID do pneu
      * @returns ITires
      */
-    static async getById(id: number): Promise<ITires | null> {
+    static async get(id: number): Promise<ITires | null> {
         const query = `SELECT * FROM tires WHERE id = ?`;
 
         try {
@@ -52,21 +52,6 @@ class TiresService {
         }
     }
 
-    /**
-     * Busca todos os pneus de um veículo.
-     * @param vehicle_id ID do veículo
-     * @returns 
-     */
-    static async getTiresByVehicleId(vehicle_id: number): Promise<ITires | null> {
-        const query = `SELECT * FROM tires WHERE vehicle_id = ?`;
-
-        try {
-            const [rows]: any = await db.promise().query(query, [vehicle_id]);
-            return rows[0] || null;
-        } catch (error) {
-            throw new Error('Erro ao buscar pneu. Tente novamente mais tarde.');
-        }
-    }
 
     /**
      * Retorna um pneu pelo código.

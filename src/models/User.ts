@@ -1,5 +1,5 @@
 
-interface IUser {
+export interface IUser {
     id?: number;
     name: string;
     email: string;
@@ -7,4 +7,9 @@ interface IUser {
     role: string;
 }
 
-export default IUser;
+export interface IUserUpdate {
+    name: string;
+    email: string;
+    role: string;
+}
+
