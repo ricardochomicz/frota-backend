@@ -5,9 +5,9 @@ class VehicleTiresService {
 
     static async create(vehicleTires: IVehicleTires, user_id: number): Promise<{ id: number }> {
         const { vehicle_id, tire_id, installation_date, mileage_at_installation, predicted_replacement_mileage } = vehicleTires;
-        const query = `INSERT INTO vehicle_tires (vehicle_id, tire_id, installation_date, mileage_at_installation, predicted_replacement_mileage) VALUES (?, ?, ?, ?, ?)`;
+        const query = `INSERT INTO vehicle_tires (vehicle_id, tire_id, installation_date, mileage_at_installation, predicted_replacement_mileage, user_id) VALUES (?, ?, ?, ?, ?, ?)`;
         try {
-            const [result]: any = await db.promise().query(query, [vehicle_id, tire_id, installation_date, mileage_at_installation, predicted_replacement_mileage]);
+            const [result]: any = await db.promise().query(query, [vehicle_id, tire_id, installation_date, mileage_at_installation, predicted_replacement_mileage, user_id]);
             return { id: result.insertId };
         } catch (error) {
             throw new Error('Erro na requisição. Tente novamente mais tarde.');
