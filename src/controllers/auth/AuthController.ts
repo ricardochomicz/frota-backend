@@ -10,7 +10,7 @@ class AuthController {
     // Registro de usuário
     static async register(req: Request, res: Response): Promise<void> {
         try {
-            // Validação de dados usando Zod
+            // Validação de dados
             const { name, email, password_hash, role } = registerSchema.parse(req.body);
 
             // Verifica se o usuário já existe
@@ -27,7 +27,7 @@ class AuthController {
             return;
         } catch (err: any) {
             if (err instanceof z.ZodError) {
-                // Validação com Zod falhou
+                // Validação falhou
                 res.status(400).json({ error: 'Dados inválidos', details: err.errors });
                 return;
             }
@@ -40,22 +40,14 @@ class AuthController {
     // Login de usuário
     static async login(req: Request, res: Response): Promise<void> {
         try {
-            // Validação de dados usando Zod
+            // Validação de dados
             const { email, password_hash } = loginSchema.parse(req.body);
 
             // Busca o usuário no banco de dados
             const user = await User.findByEmail(email);
-            console.log(user);
-            if (!user) {
+            if (!user || !(await bcrypt.compare(password_hash, user.password_hash))) {
                 res.status(401).json({ error: 'Credenciais inválidas' });
-                return
-            }
-
-            // Compara a senha
-            const passwordMatch = await bcrypt.compare(password_hash, user.password_hash);
-            if (!passwordMatch) {
-                res.status(401).json({ error: 'Credenciais inválidas' });
-                return
+                return;
             }
 
             // Gera o token JWT
