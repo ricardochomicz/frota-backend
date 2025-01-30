@@ -2,6 +2,7 @@ import express from 'express';
 import vehicleRoutes from './routes/VehicleRoutes';
 import tireRoutes from './routes/TiresRoutes';
 import vehicleTiresRoutes from './routes/VehicleTiresRoutes';
+import maintenanceRoutes from './routes/MaintenanceRoutes';
 import userRoutes from './routes/UserRoutes';
 import AuthController from './controllers/auth/AuthController';
 
@@ -28,6 +29,9 @@ app.use('/api', tireRoutes);
 
 // Rotas Veiculos/Pneus
 app.use('/api', vehicleTiresRoutes);
+
+// Rotas Manutenção
+app.use('/api', maintenanceRoutes);
 
 // Rotas Usuários
 app.use('/api', userRoutes);
