@@ -68,6 +68,14 @@ class UserService {
             throw new Error('Erro ao atualizar usuário.');
         }
     }
+
+    static async delete(id: number): Promise<void> {
+        try {
+            await db.promise().query('DELETE FROM users WHERE id = ?', [id]);
+        } catch (error) {
+            throw new Error('Erro ao deletar usuário.');
+        }
+    }
 }
 
 export default UserService;

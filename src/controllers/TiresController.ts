@@ -73,6 +73,10 @@ class TiresController {
 
     static async update(req: Request, res: Response): Promise<void> {
         try {
+            if (!req.user) {
+                res.status(401).json({ error: "Usuário não autenticado" });
+                return;
+            }
             const { id } = req.params;
             const tires = tiresSchema.parse(req.body);
 

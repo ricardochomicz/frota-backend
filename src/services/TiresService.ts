@@ -10,7 +10,7 @@ class TiresService {
  * @param vehicle Dados do pneu
  * @returns Retorna o ID do pneu inserido
  */
-    static async create(tires: ITires, user_id: number): Promise<{ id: number }> {
+    static async create(tires: ITires, user_id: number): Promise<{ data: ITires }> {
 
         const { code, brand, model, price } = tires;
 
@@ -18,7 +18,7 @@ class TiresService {
 
         try {
             const [result]: any = await db.promise().query(query, [code, brand, model, price, user_id]);
-            return { id: result.insertId };
+            return result;
         } catch (error) {
             throw new Error('Erro ao criar pneus. Tente novamente mais tarde.');
         }
