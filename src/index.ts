@@ -3,6 +3,7 @@ import vehicleRoutes from './routes/VehicleRoutes';
 import tireRoutes from './routes/TiresRoutes';
 import vehicleTiresRoutes from './routes/VehicleTiresRoutes';
 import maintenanceRoutes from './routes/MaintenanceRoutes';
+import costAnalysisRoutes from './routes/CostAnalysisRoutes';
 import userRoutes from './routes/UserRoutes';
 import AuthController from './controllers/auth/AuthController';
 
@@ -32,6 +33,9 @@ app.use('/api', vehicleTiresRoutes);
 
 // Rotas Manutenção
 app.use('/api', maintenanceRoutes);
+
+// Rotas Análise de Custo
+app.use('/api', costAnalysisRoutes);
 
 // Rotas Usuários
 app.use('/api', userRoutes);
