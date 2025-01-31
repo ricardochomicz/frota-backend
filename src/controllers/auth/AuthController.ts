@@ -31,7 +31,6 @@ class AuthController {
                 res.status(400).json({ error: 'Dados inválidos', details: err.errors });
                 return;
             }
-            console.error('[ERRO] Falha ao registrar usuário:', err);
             res.status(500).json({ error: 'Erro ao criar usuário', details: err.message });
             return;
         }

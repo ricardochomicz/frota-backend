@@ -34,7 +34,7 @@ router.get('/vehicles/license_plate/:license_plate', authMiddleware, VehicleCont
  * @route PUT /vehicles/:id
  * @description Atualiza um veículo pelo ID
  */
-router.put('/vehicles/:id', authMiddleware, validate(vehicleSchema), VehicleController.update);
+router.put('/vehicles/:id/edit', authMiddleware, validate(vehicleSchema), VehicleController.update);
 
 
 /**

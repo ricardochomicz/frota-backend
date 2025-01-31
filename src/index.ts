@@ -10,7 +10,13 @@ import AuthController from './controllers/auth/AuthController';
 
 const app = express();
 
+const corsOptions = {
+    origin: 'http://localhost:3000',
+    optionsSuccessStatus: 200
+};
+
 app.use(cors());
+
 
 const PORT = process.env.PORT || 5000;
 
