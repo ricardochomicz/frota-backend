@@ -1,4 +1,5 @@
 import express from 'express';
+import cors from 'cors';
 import vehicleRoutes from './routes/VehicleRoutes';
 import tireRoutes from './routes/TiresRoutes';
 import vehicleTiresRoutes from './routes/VehicleTiresRoutes';
@@ -8,6 +9,9 @@ import userRoutes from './routes/UserRoutes';
 import AuthController from './controllers/auth/AuthController';
 
 const app = express();
+
+app.use(cors());
+
 const PORT = process.env.PORT || 5000;
 
 app.use(express.json());
