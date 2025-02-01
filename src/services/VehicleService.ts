@@ -13,10 +13,11 @@ class VehicleService {
 
         const { brand, model, year, license_plate, mileage, fuel_type } = vehicle;
 
+        const uppercaseLicensePlate = license_plate.toUpperCase();
         const query = `INSERT INTO vehicles (brand, model, year, license_plate, mileage, fuel_type, user_id) VALUES (?, ?, ?, ?, ?, ?, ?)`;
 
         try {
-            const [result]: any = await db.promise().query(query, [brand, model, year, license_plate, mileage, fuel_type, user_id]);
+            const [result]: any = await db.promise().query(query, [brand, model, year, uppercaseLicensePlate, mileage, fuel_type, user_id]);
             return { id: result.insertId };
         } catch (error) {
             throw new Error('Erro ao criar veículo. Tente novamente mais tarde.');
@@ -99,6 +100,7 @@ class VehicleService {
             throw new Error('Erro ao deletar veículo. Tente novamente mais tarde.');
         }
     }
+
 }
 
 export default VehicleService;

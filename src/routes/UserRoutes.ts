@@ -31,4 +31,7 @@ router.get('/users/:id', authMiddleware, UserController.get);
  */
 router.put('/users/:id', authMiddleware, validate(userSchema), UserController.update);
 
+
+router.get('/me', authMiddleware, UserController.getAuthenticatedUser);
+
 export default router;

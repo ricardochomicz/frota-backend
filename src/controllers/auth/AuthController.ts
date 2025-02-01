@@ -49,14 +49,16 @@ class AuthController {
                 return;
             }
 
-            // 🔥 Certifique-se de que user.id é um número válido
-            if (!user.id) {
+            if (!user.id || typeof user.id !== 'number') {
                 res.status(500).json({ error: 'Erro interno: usuário sem ID' });
                 return;
             }
 
             const token = generateToken(user.id, user.role);
-            res.status(200).json({ message: 'Login bem-sucedido', token });
+
+            // Criar uma cópia do usuário sem o campo password_hash
+            const { password_hash: _, ...userWithoutPassword } = user;
+            res.status(200).json({ message: 'Login bem-sucedido', token, user: userWithoutPassword });
 
         } catch (err: any) {
             if (err instanceof z.ZodError) {

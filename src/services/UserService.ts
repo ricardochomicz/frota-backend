@@ -76,6 +76,16 @@ class UserService {
             throw new Error('Erro ao deletar usuário.');
         }
     }
+
+    static async me(req: any): Promise<IUser | null> {
+        try {
+            const { id } = req.user;
+            const [rows]: any = await db.promise().query('SELECT id, name, email, role, created_at, updated_at FROM users WHERE id = ?', [id]);
+            return rows[0] || null;
+        } catch (error) {
+            throw new Error('Erro ao buscar usuário.');
+        }
+    }
 }
 
 export default UserService;
