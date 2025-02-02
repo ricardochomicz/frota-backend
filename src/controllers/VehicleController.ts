@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import VehicleService from '../services/VehicleService';
 import { vehicleSchema } from '../schemas/VehicleSchema';
+import IVehicle from '../models/Vehicle';
 
 
 class VehicleController {
@@ -86,9 +87,21 @@ class VehicleController {
             }
             res.status(200).json({ message: 'Veículo encontrado', data: vehicle });
         } catch (err: any) {
-            res.status(500).json({ error: 'Erro ao buscar veículo', details: err.message });
+            res.status(500).json({ error: 'Erro ao buscar veículoS', details: err.message });
         }
     }
+
+    static async getAllVehiclesToSelect(req: Request, res: Response): Promise<any> {
+
+        try {
+            const vehicles = await VehicleService.getAllVehiclesToSelect();
+            res.status(200).json(vehicles);
+
+        } catch (err: any) {
+            res.status(500).json({ error: "Erro ao buscar veículosS", details: err.message });
+        }
+    }
+
 
     static async update(req: Request, res: Response): Promise<void> {
         try {

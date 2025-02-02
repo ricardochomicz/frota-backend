@@ -32,16 +32,15 @@ class VehicleService {
      * @returns 
      */
     static async getByLicensePlate(licensePlate: string): Promise<IVehicle | null> {
-        const query = `SELECT * FROM vehicles WHERE license_plate = ?`;
+        const query = `SELECT * FROM vehicles WHERE license_plate LIKE ?`;
 
         try {
-            const [rows]: any = await db.promise().query(query, [licensePlate]);
-            return rows[0] || null;
+            const [rows]: any = await db.promise().query(query, [`%${licensePlate}%`]);
+            return rows;
         } catch (error) {
-            throw new Error('Erro ao buscar veículos. Tente novamente mais tarde.');
+            throw new Error('Erro ao buscar veículosS. Tente novamente mais tarde.');
         }
     }
-
 
     /**
      * 
@@ -98,6 +97,16 @@ class VehicleService {
         }
     }
 
+    static async getAllVehiclesToSelect(): Promise<any> {
+        const query = `SELECT * FROM vehicles`;
+
+        try {
+            const [rows]: any = await db.promise().query(query);
+            return rows;
+        } catch (error) {
+            throw new Error('Erro na consulta SQL. Tente novamente mais tarde.');
+        }
+    }
 
 
     /**

@@ -31,6 +31,11 @@ router.get('/vehicles/:id', authMiddleware, VehicleController.get);
 router.get('/vehicles/license_plate/:license_plate', authMiddleware, VehicleController.getByLicensePlate);
 
 /**
+ * @route GET /vehicles/alls
+ * @description Busca todos os veículos cadastrados
+ */
+router.get('/to-select', authMiddleware, VehicleController.getAllVehiclesToSelect);
+/**
  * @route PUT /vehicles/:id
  * @description Atualiza um veículo pelo ID
  */

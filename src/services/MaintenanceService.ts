@@ -1,6 +1,7 @@
 import IMaintenance from "../models/Maintenance";
 import db from "../config/db";
-
+const PAGE = 1;
+const LIMIT = 10;
 class MaintenanceService {
 
     static async create(maintenance: IMaintenance, user_id: number) {
@@ -14,11 +15,83 @@ class MaintenanceService {
         }
     }
 
-    static async getAll(): Promise<IMaintenance[]> {
-        const query = `SELECT * FROM maintenance`;
+    static async getAll(
+        page = PAGE,
+        limit = LIMIT,
+        filters: { type?: string, startDate?: Date, endDate?: Date, license_plate?: string } = {}): Promise<{ maintenances: IMaintenance[], total: number }> {
+        const offset = (Math.max(1, Number(page)) - 1) * Math.max(1, Number(limit));
+
+        let query = `
+        SELECT m.*, 
+            v.id as vehicle_id, v.license_plate, v.model, v.brand, v.year, v.mileage,
+            u.id AS user_id, u.name AS user_name, u.email AS user_email
+        FROM maintenance m
+        JOIN vehicles v ON m.vehicle_id = v.id
+        JOIN users u ON m.user_id = u.id
+        WHERE 1=1
+    `;
+        let countQuery = `SELECT COUNT(*) AS total
+                          FROM maintenance m
+                          JOIN vehicles v ON m.vehicle_id = v.id 
+                          WHERE 1=1`;
+        let queryParams: any[] = [];
+
+        if (filters.type) {
+            query += ` AND type LIKE ?`;
+            countQuery += ` AND type LIKE ?`;
+            queryParams.push(`%${filters.type}%`);
+        }
+
+        if (filters.license_plate) {
+            query += ` AND v.license_plate LIKE ?`;
+            countQuery += ` AND v.license_plate LIKE ?`;
+            queryParams.push(`%${filters.license_plate}%`);
+        }
+
+        if (filters.startDate && filters.endDate) {
+            query += ` AND date BETWEEN ? AND ?`;
+            countQuery += ` AND date BETWEEN ? AND ?`;
+            queryParams.push(filters.startDate, filters.endDate);
+        } else if (filters.startDate) {
+            query += ` AND date >= ?`;
+            countQuery += ` AND date >= ?`;
+            queryParams.push(filters.startDate);
+        } else if (filters.endDate) {
+            query += ` AND date <= ?`;
+            countQuery += ` AND date <= ?`;
+            queryParams.push(filters.endDate);
+        }
+
+
+        query += ` LIMIT ? OFFSET ?`;
+        queryParams.push(limit, offset);
+
         try {
-            const [rows]: any = await db.promise().query(query);
-            return rows;
+            const [[{ total }]]: any = await db.promise().query(countQuery, queryParams.slice(0, -2));
+            const [rows]: any = await db.promise().query(query, queryParams);
+            const formattedRows = rows.map((maintenance: any) => ({
+                id: maintenance.id,
+                date: maintenance.date,
+                type: maintenance.type,
+                description: maintenance.description,
+                mileage_at_maintenance: maintenance.mileage_at_maintenance,
+                created_at: maintenance.created_at,
+                updated_at: maintenance.updated_at,
+                vehicle: {
+                    id: maintenance.vehicle_id,
+                    license_plate: maintenance.license_plate,
+                    model: maintenance.model,
+                    brand: maintenance.brand,
+                    year: maintenance.year
+                },
+                user: {
+                    id: maintenance.user_id,
+                    name: maintenance.user_name,
+                    email: maintenance.user_email
+                }
+            }));
+
+            return { maintenances: formattedRows, total };
         } catch (error) {
             throw new Error('Erro ao buscar manutenções. Tente novamente mais tarde.');
         }
@@ -98,11 +171,15 @@ class MaintenanceService {
         }
     }
 
+    static async destroy(id: number) {
+        const query = `DELETE FROM maintenance WHERE id = ?`;
 
-
-
-
-
+        try {
+            await db.promise().query(query, [id]);
+        } catch (error) {
+            throw new Error('Erro ao deletar manutenção. Tente novamente mais tarde.');
+        }
+    }
 }
 
 export default MaintenanceService;

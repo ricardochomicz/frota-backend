@@ -26,6 +26,8 @@ router.get('/maintenances/:id', authMiddleware, MaintenanceController.get);
  * @route PUT /maintenances/:id
  * @description Atualiza uma manutenção pelo ID
  */
-router.put('/maintenances/:id', authMiddleware, MaintenanceController.update);
+router.put('/maintenances/:id/edit', authMiddleware, MaintenanceController.update);
+
+router.delete('/maintenances/:id/delete', authMiddleware, MaintenanceController.destroy);
 
 export default router;

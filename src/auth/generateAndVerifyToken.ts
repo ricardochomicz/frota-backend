@@ -14,13 +14,13 @@ export function generateToken(userId: number, role: string): string {
 }
 
 // Verifica um token JWT
-export function verifyToken(token: string): { userId: number; role: string } | null {
-    try {
-        const decoded = jwt.verify(token, JWT_SECRET) as { userId: number; role: string };
-        return decoded;
-    } catch (err) {
-        return null;
-    }
+export function verifyToken(token: string): Promise<any> {
+    return new Promise((resolve, reject) => {
+        jwt.verify(token, JWT_SECRET, (err, decoded) => {
+            if (err) return reject(err);
+            resolve(decoded);
+        });
+    });
 }
 
 export const getAuthenticatedUser = async (req: Request): Promise<IUser | null> => {
