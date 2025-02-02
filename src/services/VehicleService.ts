@@ -1,7 +1,9 @@
-import { Request } from 'express';
-import { getAuthenticatedUser } from '../auth/generateAndVerifyToken';
+
 import db from '../config/db';
 import IVehicle from "../models/Vehicle";
+
+const LIMIT = 5;
+const PAGE = 1;
 
 class VehicleService {
     /**
@@ -45,12 +47,36 @@ class VehicleService {
      * 
      * @returns Retorna uma lista com todos os veículos cadastrados
      */
-    static async getAll(): Promise<IVehicle[]> {
-        const query = `SELECT * FROM vehicles`;
+    static async getAll(page = PAGE, limit = LIMIT, filters: { license_plate?: string; brand?: string; model?: string } = {}): Promise<{ vehicles: IVehicle[], total: number }> {
+        const offset = (Math.max(1, Number(page)) - 1) * Math.max(1, Number(limit));
+
+        let query = `SELECT * FROM vehicles WHERE 1=1`;
+        let countQuery = `SELECT COUNT(*) AS total FROM vehicles WHERE 1=1`;
+        let queryParams: any[] = [];
+
+        if (filters.license_plate) {
+            query += ` AND license_plate LIKE ?`;
+            countQuery += ` AND license_plate LIKE ?`;
+            queryParams.push(`%${filters.license_plate}%`);
+        }
+        if (filters.brand) {
+            query += ` AND brand LIKE ?`;
+            countQuery += ` AND brand LIKE ?`;
+            queryParams.push(`%${filters.brand}%`);
+        }
+        if (filters.model) {
+            query += ` AND model LIKE ?`;
+            countQuery += ` AND model LIKE ?`;
+            queryParams.push(`%${filters.model}%`);
+        }
+
+        query += ` LIMIT ? OFFSET ?`;
+        queryParams.push(limit, offset);
 
         try {
-            const [rows]: any = await db.promise().query(query);
-            return rows;
+            const [[{ total }]]: any = await db.promise().query(countQuery, queryParams.slice(0, -2));
+            const [rows]: any = await db.promise().query(query, queryParams);
+            return { vehicles: rows, total };
         } catch (error) {
             throw new Error('Erro ao buscar veículos. Tente novamente mais tarde.');
         }

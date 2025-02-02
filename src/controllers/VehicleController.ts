@@ -33,9 +33,23 @@ class VehicleController {
     }
 
     static async getAll(req: Request, res: Response): Promise<void> {
+        const page = Math.max(1, Number(req.query.page) || 1);
+        const limit = Math.max(1, Number(req.query.limit) || 10);
+        const filters = {
+            license_plate: req.query.license_plate as string || undefined,
+            brand: req.query.brand as string || undefined,
+            model: req.query.model as string || undefined
+        };
+
         try {
-            const vehicles = await VehicleService.getAll();    // Busca todos os veículos no banco de dados
-            res.status(200).json({ data: vehicles });
+            const { vehicles, total } = await VehicleService.getAll(page, limit, filters);
+            res.status(200).json({
+                data: vehicles,
+                total,
+                page,
+                limit,
+                totalPages: Math.ceil(total / limit)
+            });
         } catch (err: any) {
             res.status(500).json({ error: 'Erro ao buscar veículos', details: err.message });
         }

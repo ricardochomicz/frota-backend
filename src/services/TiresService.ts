@@ -3,6 +3,9 @@ import ITires from "../models/Tires";
 import { getAuthenticatedUser } from '../auth/generateAndVerifyToken';
 import { Request } from 'express';
 
+const LIMIT = 5;
+const PAGE = 1;
+
 class TiresService {
 
     /**
@@ -28,16 +31,42 @@ class TiresService {
      * 
      * @returns Retorna uma lista com todos os pneus cadastrados
      */
-    static async getAll(): Promise<ITires[]> {
-        const query = `SELECT * FROM tires`;
+    static async getAll(page = PAGE, limit = LIMIT, filters: { code?: string; brand?: string; model?: string } = {}): Promise<{ tires: ITires[], total: number }> {
+        const offset = (Math.max(1, Number(page)) - 1) * Math.max(1, Number(limit));
+
+        let query = `SELECT * FROM tires WHERE 1=1`;
+        let countQuery = `SELECT COUNT(*) AS total FROM tires WHERE 1=1`;
+        let queryParams: any[] = [];
+
+        if (filters.code) {
+            query += ` AND code LIKE ?`;
+            countQuery += ` AND code LIKE ?`;
+            queryParams.push(`%${filters.code}%`);
+        }
+        if (filters.brand) {
+            query += ` AND brand LIKE ?`;
+            countQuery += ` AND brand LIKE ?`;
+            queryParams.push(`%${filters.brand}%`);
+        }
+        if (filters.model) {
+            query += ` AND model LIKE ?`;
+            countQuery += ` AND model LIKE ?`;
+            queryParams.push(`%${filters.model}%`);
+        }
+
+        query += ` LIMIT ? OFFSET ?`;
+        queryParams.push(limit, offset);
 
         try {
-            const [rows]: any = await db.promise().query(query);
-            return rows;
+            const [[{ total }]]: any = await db.promise().query(countQuery, queryParams.slice(0, -2));
+            const [rows]: any = await db.promise().query(query, queryParams);
+            return { tires: rows, total };
         } catch (error) {
             throw new Error('Erro ao buscar pneus. Tente novamente mais tarde.');
         }
     }
+
+
 
     /**
      * Busca um pneu pelo ID.
