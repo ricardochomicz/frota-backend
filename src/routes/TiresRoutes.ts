@@ -35,6 +35,8 @@ router.get('/tires/code/:code', authMiddleware, TireController.getTiresByCode);
  * @route PUT /tires/:id
  * @description Atualiza um pneu pelo ID
  */
-router.put('/tires/:id', authMiddleware, validate(tiresSchema), TireController.update);
+router.put('/tires/:id/edit', authMiddleware, validate(tiresSchema), TireController.update);
+
+router.delete('/tires/:id/delete', authMiddleware, TireController.destroy);
 
 export default router;

@@ -88,6 +88,16 @@ class TiresService {
             throw new Error('Erro ao atualizar pneu. Tente novamente mais tarde.');
         }
     }
+
+    static async destroy(id: number): Promise<void> {
+        const query = `DELETE FROM tires WHERE id = ?`;
+
+        try {
+            await db.promise().query(query, [id]);
+        } catch (error) {
+            throw new Error('Erro ao deletar pneu. Tente novamente mais tarde.');
+        }
+    }
 }
 
 export default TiresService;

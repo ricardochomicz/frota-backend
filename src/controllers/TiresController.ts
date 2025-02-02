@@ -89,6 +89,20 @@ class TiresController {
             res.status(500).json({ error: 'Erro interno', details: err.message });
         }
     }
+
+    static async destroy(req: Request, res: Response): Promise<void> {
+        try {
+            if (!req.user) {
+                res.status(401).json({ error: "Usuário não autenticado" });
+                return;
+            }
+            const { id } = req.params;
+            await TiresService.destroy(Number(id));
+            res.status(200).json({ message: 'Pneu deletado com sucesso' });
+        } catch (err: any) {
+            res.status(500).json({ error: 'Erro ao deletar pneu', details: err.message });
+        }
+    }
 }
 
 export default TiresController;

@@ -3,7 +3,7 @@ interface ITires {
     code: string;
     brand: string;
     model: string;
-    price: number;
+    price: string;
 }
 
 export default ITires;
