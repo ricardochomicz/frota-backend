@@ -110,10 +110,10 @@ class VehicleController {
      * @param req ID do veículo a ser excluído
      * 
      */
-    static async delete(req: Request, res: Response): Promise<void> {
+    static async destroy(req: Request, res: Response): Promise<void> {
         try {
             const { id } = req.params;  // ID do veículo a ser excluído
-            await VehicleService.delete(Number(id));  // Exclui o veículo no banco de dados
+            await VehicleService.destroy(Number(id));  // Exclui o veículo no banco de dados
             res.status(200).json({ message: 'Veículo excluído com sucesso' });
         } catch (err: any) {
             res.status(500).json({ error: 'Erro ao excluir veículo', details: err.message });

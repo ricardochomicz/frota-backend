@@ -117,7 +117,7 @@ class VehicleService {
         }
     }
 
-    static async delete(id: number): Promise<void> {
+    static async destroy(id: number): Promise<void> {
         const query = `DELETE FROM vehicles WHERE id = ?`;
 
         try {

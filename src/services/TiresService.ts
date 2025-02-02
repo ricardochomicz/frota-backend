@@ -118,15 +118,31 @@ class TiresService {
         }
     }
 
-    static async destroy(id: number): Promise<void> {
-        const query = `DELETE FROM tires WHERE id = ?`;
+    static async destroy(tireId: number): Promise<void> {
+        // Verifica se o pneu está associado a algum veículo na tabela pivot
+        const checkQuery = `
+            SELECT COUNT(*) AS count 
+            FROM vehicle_tires 
+            WHERE tire_id = ?
+        `;
 
         try {
-            await db.promise().query(query, [id]);
+            const [result]: any = await db.promise().query(checkQuery, [tireId]);
+
+            // Se o pneu estiver associado a algum veículo, não pode ser excluído
+            if (result[0].count > 0) {
+                throw new Error("Este pneu não pode ser excluído, pois está em uso por um veículo.");
+            }
+
+            // Se o pneu não estiver em uso, pode ser excluído da tabela `tires`
+            const deleteQuery = `DELETE FROM tires WHERE id = ?`;
+            await db.promise().query(deleteQuery, [tireId]);
+
         } catch (error) {
-            throw new Error('Erro ao deletar pneu. Tente novamente mais tarde.');
+            throw new Error("Erro ao tentar excluir o pneu.");
         }
     }
+
 }
 
 export default TiresService;
