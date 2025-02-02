@@ -70,6 +70,17 @@ class AuthController {
 
         }
     }
+
+    static async logout(req: Request, res: Response): Promise<void> {
+        try {
+            res.clearCookie('token');
+            res.clearCookie('user');
+            res.status(200).json({ message: 'Logout bem-sucedido' });
+        } catch (err: any) {
+            console.error('[ERRO] Falha ao fazer logout:', err);
+            res.status(500).json({ error: 'Erro ao fazer logout', details: err.message });
+        }
+    }
 }
 
 export default AuthController;

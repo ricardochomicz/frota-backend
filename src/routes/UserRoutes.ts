@@ -3,6 +3,7 @@ import UserController from '../controllers/UserController';
 import { authMiddleware } from '../middlewares/AuthMiddleware';
 import { validate } from '../middlewares/Validate';
 import { userSchema } from '../schemas/UserSchema';
+import AuthController from '../controllers/auth/AuthController';
 
 
 const router = express.Router();
@@ -33,5 +34,7 @@ router.put('/users/:id', authMiddleware, validate(userSchema), UserController.up
 
 
 router.get('/me', authMiddleware, UserController.getAuthenticatedUser);
+
+router.post('/logout', AuthController.logout);
 
 export default router;

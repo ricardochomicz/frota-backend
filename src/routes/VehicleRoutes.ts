@@ -41,7 +41,7 @@ router.put('/vehicles/:id/edit', authMiddleware, validate(vehicleSchema), Vehicl
  * @route DELETE /vehicles/:id
  * @description Deleta um veículo pelo ID
  */
-router.delete('/vehicles/:id', authMiddleware, VehicleController.delete);
+router.delete('/vehicle/:id/delete', authMiddleware, VehicleController.destroy);
 
 
 
