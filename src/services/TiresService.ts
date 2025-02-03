@@ -120,11 +120,7 @@ class TiresService {
 
     static async destroy(tireId: number): Promise<void> {
         // Verifica se o pneu está associado a algum veículo na tabela pivot
-        const checkQuery = `
-            SELECT COUNT(*) AS count 
-            FROM vehicle_tires 
-            WHERE tire_id = ?
-        `;
+        const checkQuery = "SELECT COUNT(*) AS count FROM vehicle_tires WHERE tire_id = ?";
 
         try {
             const [result]: any = await db.promise().query(checkQuery, [tireId]);
@@ -135,11 +131,11 @@ class TiresService {
             }
 
             // Se o pneu não estiver em uso, pode ser excluído da tabela `tires`
-            const deleteQuery = `DELETE FROM tires WHERE id = ?`;
+            const deleteQuery = "DELETE FROM tires WHERE id = ?";
             await db.promise().query(deleteQuery, [tireId]);
 
         } catch (error) {
-            throw new Error("Erro ao tentar excluir o pneu.");
+            throw new Error("Este pneu não pode ser excluído, pois está em uso por um veículo.");
         }
     }
 

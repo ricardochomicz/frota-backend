@@ -79,7 +79,7 @@ class TiresController {
             const tires = await TiresService.getTiresByCode(code);
             if (!tires) {
                 res.status(404).json({ error: 'Pneu não encontrado' });
-                return;
+
             }
             res.status(200).json({ data: tires });
         } catch (err: any) {
