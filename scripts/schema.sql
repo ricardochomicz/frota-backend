@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS tires (
   brand VARCHAR(255) NOT NULL,
   model VARCHAR(255) NOT NULL,
   price DECIMAL(10, 2) NOT NULL,
+  status ENUM('available', 'in use', 'lower') NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
@@ -83,4 +84,7 @@ CREATE TABLE IF NOT EXISTS cost_analysis (
   FOREIGN KEY (vehicle_id) REFERENCES vehicles(id) ON DELETE CASCADE
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
+
+ALTER TABLE tires
+MODIFY COLUMN status ENUM('available', 'in use', 'lower') NULL;
 

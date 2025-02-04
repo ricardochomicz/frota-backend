@@ -6,7 +6,7 @@ import TiresService from "../services/TiresService";
 class TiresController {
 
     static async create(req: Request, res: Response): Promise<void> {
-        console.log(req.user);
+
         try {
             if (!req.user) {
                 res.status(401).json({ error: "Usuário não autenticado" });
@@ -25,7 +25,7 @@ class TiresController {
 
 
             // Criação do pneu no banco de dados
-            const result = await TiresService.create(tires, req.user.userId);
+            const result = await TiresService.create(tires);
             res.status(201).json({ message: 'Pneu cadastrado com sucesso', data: result });
 
         } catch (err: any) {
@@ -42,7 +42,8 @@ class TiresController {
         const filters = {
             code: req.query.code as string || undefined,
             brand: req.query.brand as string || undefined,
-            model: req.query.model as string || undefined
+            model: req.query.model as string || undefined,
+            status: req.query.status as string || undefined
         };
 
 

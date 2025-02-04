@@ -8,6 +8,7 @@ interface IVehicle {
     license_plate: string;
     mileage: number;
     fuel_type: string;
+    user_id?: number;
 }
 
 

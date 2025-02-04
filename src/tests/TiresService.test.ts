@@ -1,5 +1,6 @@
 import db from '../config/db';
 import ITires from "../models/Tires";
+import BaseService from '../services/BaseService';
 import TiresService from '../services/TiresService';
 
 jest.mock('../config/db', () => ({
@@ -12,54 +13,113 @@ describe('TiresService', () => {
         jest.clearAllMocks();
     });
 
-    describe('TiresService - create', () => {
+    describe('create', () => {
         it('deveria criar um novo pneu e retornar o resultado', async () => {
-            const tires: ITires = { code: '1234', brand: 'BrandX', model: 'ModelY', price: '100.00' };
-            const user_id = 1;
+
+            const tires: ITires = { code: '1234', brand: 'BrandX', model: 'ModelY', price: '100.00', user_id: 1, status: 'available' };
+
             const result = { insertId: 1 };
 
             (db.promise().query as jest.Mock).mockResolvedValueOnce([result]);
 
-            const response = await TiresService.create(tires, user_id);
+            const response = await TiresService.create(tires);
             expect(response).toEqual(result);
             expect(db.promise().query).toHaveBeenCalledWith(
-                `INSERT INTO tires (code, brand, model, price, user_id) VALUES (?, ?, ?, ?, ?)`,
-                [tires.code, tires.brand, tires.model, tires.price, user_id]
+                `INSERT INTO tires (code, brand, model, price, user_id, status) VALUES (?, ?, ?, ?, ?, ?)`,
+                [tires.code, tires.brand, tires.model, tires.price, tires.user_id, tires.status]
             );
         });
 
         it('deve gerar um erro se a consulta ao banco de dados falhar', async () => {
-            const tires: ITires = { code: '1234', brand: 'BrandX', model: 'ModelY', price: '100.00' };
-            const user_id = 1;
+
+            const tires: ITires = { code: '1234', brand: 'BrandX', model: 'ModelY', price: '100.00', user_id: 1, status: 'available' };
+
 
             (db.promise().query as jest.Mock).mockRejectedValueOnce(new Error('Database error'));
 
-            await expect(TiresService.create(tires, user_id)).rejects.toThrow('Erro ao criar pneus. Tente novamente mais tarde.');
+            await expect(TiresService.create(tires)).rejects.toThrow('Erro ao criar pneus. Tente novamente mais tarde.');
         });
     });
 
-    describe('TiresService - getAll', () => {
-        it('deve retornar uma lista de pneus e a contagem total', async () => {
-            const tires: ITires[] = [{ id: 1, code: '1234', brand: 'BrandX', model: 'ModelY', price: '100.00', user_id: 1 }];
-            const total = 1;
+    describe("getAll", () => {
+        it("deve retornar todos os pneus sem filtros", async () => {
+            const mockTires = [{ id: 1, code: "ABC-1234", brand: "Michelin", model: "X-ICE", price: "100.00", status: "available" }];
+            const mockTotal = [{ total: 1 }];
 
-            (db.promise().query as jest.Mock)
-                .mockResolvedValueOnce([[{ total }]])
-                .mockResolvedValueOnce([tires]);
+            jest.spyOn(db, 'promise').mockReturnValue({
+                query: jest.fn()
+                    .mockResolvedValueOnce([[]])
+                    .mockResolvedValueOnce([mockTotal]) // Retorno da contagem total
+                    .mockResolvedValueOnce([mockTires]) // Retorno dos pneus
+            } as any);
 
-            const response = await TiresService.getAll();
-            expect(response).toEqual({ tires, total });
-            expect(db.promise().query).toHaveBeenCalledTimes(2);
+            const result = await TiresService.getAll(1, 10, {}, 1);
+            expect(result).toEqual({ tires: mockTires, total: 1 });
         });
 
-        it('deve gerar um erro se a consulta ao banco de dados falhar', async () => {
-            (db.promise().query as jest.Mock).mockRejectedValueOnce(new Error('Database error'));
+        it("deve aplicar filtros corretamente", async () => {
+            const mockTires = [{ id: 2, code: "XYZ-0456", brand: "Pirelli", model: "Winter", status: "in use" }];
+            const mockTotal = [{ total: 1 }];
 
-            await expect(TiresService.getAll()).rejects.toThrow('Erro ao buscar pneus. Tente novamente mais tarde.');
+            jest.spyOn(db, 'promise').mockReturnValue({
+                query: jest.fn()
+                    .mockResolvedValueOnce([[]])
+                    .mockResolvedValueOnce([mockTotal])
+                    .mockResolvedValueOnce([mockTires])
+            } as any);
+
+            const filters = { code: "XYZ-0456", brand: "Pirelli" };
+            const result = await TiresService.getAll(1, 10, filters, 2);
+            expect(result).toEqual({ tires: mockTires, total: 1 });
+        });
+
+        it("deve permitir que um gerente veja os registros dos subordinados", async () => {
+            const mockManager = [{ id: 3 }]; // Simula IDs de subordinados
+            const mockTires = [{ id: 3, code: "LMN-0789", brand: "Goodyear", model: "All-Terrain", status: "available", user_id: 1 }];
+            const mockTotal = [{ total: 1 }];
+
+            jest.spyOn(db, 'promise').mockReturnValue({
+                query: jest.fn()
+                    .mockResolvedValueOnce([mockManager]) // Simula que o usuário é gerente
+                    .mockResolvedValueOnce([mockTotal])
+                    .mockResolvedValueOnce([mockTires])
+            } as any);
+
+            const result = await TiresService.getAll(1, 10, {}, 5);
+            expect(result).toEqual({ tires: mockTires, total: 1 });
+        });
+
+        it("deve permitir que um usuário comum veja apenas seus próprios registros", async () => {
+
+            const mockTires = [{ id: 1, code: "LMN-0789", brand: "Goodyear", model: "All-Terrain", status: "available", user_id: 1 }];
+            const mockTotal = [{ total: 1 }];
+
+            jest.spyOn(TiresService, 'getUserAccessScope').mockResolvedValue({
+                query: ` AND user_id = ?`,
+                countQuery: ` AND user_id = ?`,
+                queryParams: [10],
+            });
+
+            jest.spyOn(db, 'promise').mockReturnValue({
+                query: jest.fn()
+                    .mockResolvedValueOnce([mockTotal])
+                    .mockResolvedValueOnce([mockTires])
+            } as any);
+
+            const result = await TiresService.getAll(1, 10, {}, 10);
+            expect(result).toEqual({ tires: mockTires, total: 1 });
+        });
+
+        it("deve lidar com erros do banco de dados", async () => {
+            jest.spyOn(db, 'promise').mockReturnValue({
+                query: jest.fn().mockRejectedValue(new Error("Erro ao buscar pneus. Tente novamente mais tarde."))
+            } as any);
+
+            await expect(TiresService.getAll(1, 10, {}, 4)).rejects.toThrow(new Error("Erro ao buscar pneus. Tente novamente mais tarde."));
         });
     });
 
-    describe('TiresService - get', () => {
+    describe('get', () => {
         it('deve retornar um pneu pelo ID', async () => {
             const tire: ITires = { id: 1, code: '1234', brand: 'BrandX', model: 'ModelY', price: '100.00', user_id: 1 };
 
@@ -84,32 +144,57 @@ describe('TiresService', () => {
         });
     });
 
-    describe('TiresService - getTiresByCode', () => {
-        it('deve retornar um pneu pelo codigo', async () => {
-            const tire: ITires = { id: 1, code: '1234', brand: 'BrandX', model: 'ModelY', price: '100.00', user_id: 1 };
+    describe('getTiresByCode', () => {
+        it('deve retornar o pneu se não estiver associado a um veículo', async () => {
+            const code = 'PNEU123';
+            const mockTire: ITires = { id: 1, code: 'PNEU123', brand: 'Pirelli', model: 'Winter', price: '100.00' };
 
-            (db.promise().query as jest.Mock).mockResolvedValueOnce([[tire]]);
+            // Mock da query para contar a associação de pneus
+            (db.promise().query as jest.Mock).mockResolvedValueOnce([[{ count: 0 }]]);
 
-            const response = await TiresService.getTiresByCode('1234');
-            expect(response).toEqual(tire);
-            expect(db.promise().query).toHaveBeenCalledWith(`SELECT * FROM tires WHERE code = ?`, ['1234']);
+            // Mock da query para selecionar o pneu pelo código
+            (db.promise().query as jest.Mock).mockResolvedValueOnce([[mockTire]]);
+
+            const result = await TiresService.getTiresByCode(code);
+
+            expect(result).toEqual(mockTire);
         });
 
-        it('deve retornar nulo se o pneu não for encontrado', async () => {
+        it('deve lançar um erro se o pneu estiver associado a um veículo', async () => {
+            const code = 'PNEU123';
+
+            // Mock da query para contar a associação de pneus
+            (db.promise().query as jest.Mock).mockResolvedValueOnce([[{ count: 1 }]]);
+
+            await expect(TiresService.getTiresByCode(code)).rejects.toThrow('Erro ao buscar pneus. Tente novamente mais tarde.');
+        });
+
+        it('deve retornar null se o pneu não for encontrado', async () => {
+            const code = 'PNEU123';
+
+            // Mock da query para contar a associação de pneus
+            (db.promise().query as jest.Mock).mockResolvedValueOnce([[{ count: 0 }]]);
+
+            // Mock da query para selecionar o pneu pelo código
             (db.promise().query as jest.Mock).mockResolvedValueOnce([[]]);
 
-            const response = await TiresService.getTiresByCode('1234');
-            expect(response).toBeNull();
+            const result = await TiresService.getTiresByCode(code);
+
+            expect(result).toBeNull();
         });
 
-        it('deve gerar um erro se a consulta ao banco de dados falhar', async () => {
-            (db.promise().query as jest.Mock).mockRejectedValueOnce(new Error('Database error'));
+        it('deve lançar um erro se ocorrer um erro no banco de dados', async () => {
+            const code = 'PNEU123';
 
-            await expect(TiresService.getTiresByCode('1234')).rejects.toThrow('Erro ao buscar pneu. Tente novamente mais tarde.');
+            // Mock da query para contar a associação de pneus
+            (db.promise().query as jest.Mock).mockRejectedValueOnce(new Error('Erro no banco de dados'));
+
+            await expect(TiresService.getTiresByCode(code)).rejects.toThrow('Erro ao buscar pneus. Tente novamente mais tarde.');
         });
     });
 
-    describe('TiresService - update', () => {
+
+    describe('update', () => {
         it('deve atualizar um pneu e retornar vazio', async () => {
             const tire: ITires = { id: 1, code: '1234', brand: 'BrandX', model: 'ModelY', price: '100.00', user_id: 1 };
 
@@ -117,8 +202,8 @@ describe('TiresService', () => {
 
             await TiresService.update(1, tire);
             expect(db.promise().query).toHaveBeenCalledWith(
-                `UPDATE tires SET code = ?, brand = ?, model = ?, price = ? WHERE id = ?`,
-                [tire.code, tire.brand, tire.model, tire.price, 1]
+                `UPDATE tires SET code = ?, brand = ?, model = ?, price = ?, user_id = ? WHERE id = ?`,
+                [tire.code, tire.brand, tire.model, tire.price, tire.user_id, 1]
             );
         });
 
@@ -131,7 +216,7 @@ describe('TiresService', () => {
         });
     });
 
-    describe('TiresService - destroy', () => {
+    describe('destroy', () => {
         it('deve excluir um pneu se ele não estiver em uso por nenhum veículo', async () => {
             (db.promise().query as jest.Mock)
                 .mockResolvedValueOnce([[{ count: 0 }]])

@@ -22,7 +22,7 @@ class VehicleController {
             }
 
             // Criação do veículo no banco de dados
-            const result = await VehicleService.create(vehicle, req.user.userId);
+            const result = await VehicleService.create(vehicle);
             res.status(201).json({ message: 'Veículo criado com sucesso', data: result });
 
         } catch (err: any) {

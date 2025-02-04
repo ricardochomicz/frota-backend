@@ -1,6 +1,7 @@
 import db from "../config/db";
 import IVehicleTires from "../models/VehicleTires";
 import moment from "moment";
+import { tiresSchema } from "../schemas/TiresSchema";
 
 class VehicleTiresService {
 
@@ -11,7 +12,7 @@ class VehicleTiresService {
         const values = vehicleTiresArray.map(tire => [
             tire.vehicle_id,
             tire.tire_id,
-            tire.installation_date, // Certifica-se de que a data está formatada corretamente
+            tire.installation_date,
             tire.mileage_at_installation,
             tire.predicted_replacement_mileage,
             tire.user_id
@@ -19,6 +20,11 @@ class VehicleTiresService {
 
         try {
             const [result]: any = await db.promise().query(query, [values]);
+
+            // Atualiza o status dos pneus após a inserção
+            for (const tire of vehicleTiresArray) {
+                await this.updateStatusTires(tire.tire_id, 'in use');
+            }
 
             // Retorna o array dos pneus inseridos, adicionando os IDs gerados
             return vehicleTiresArray.map((tire, i) => ({
@@ -29,10 +35,6 @@ class VehicleTiresService {
             throw new Error('Erro ao inserir os pneus. Tente novamente mais tarde.');
         }
     }
-
-
-
-
 
     /**
      * Busca todos os pneus de um veículo.
@@ -103,8 +105,13 @@ class VehicleTiresService {
         }
     }
 
-    private static async formatDate(date: any) {
-        return moment(date).format('YYYY-MM-DD');
+    static async updateStatusTires(tire_id: number, status: string): Promise<void> {
+        try {
+            const query = "UPDATE tires SET status = ? WHERE id = ?";
+            await db.promise().query(query, [status, tire_id]);
+        } catch (error) {
+            throw new Error('Erro ao atualizar o status do pneu. Tente novamente mais tarde.');
+        }
     }
 
 }

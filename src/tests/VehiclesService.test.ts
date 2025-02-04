@@ -14,17 +14,16 @@ describe('VehicleService', () => {
 
     describe('create', () => {
         it('deve criar um novo veiculo e retonar o resultado', async () => {
-            const vehicle: IVehicle = { brand: 'BrandX', model: 'ModelY', year: 2020, license_plate: 'ABC-1234', mileage: 10000, fuel_type: 'gasoline' };
-            const user_id = 1;
+            const vehicle: IVehicle = { brand: 'BrandX', model: 'ModelY', year: 2020, license_plate: 'ABC-1234', mileage: 10000, fuel_type: 'gasoline', user_id: 1 };
             const result = { insertId: 1 };
 
             (db.promise().query as jest.Mock).mockResolvedValueOnce([result]);
 
-            const response = await VehicleService.create(vehicle, user_id);
+            const response = await VehicleService.create(vehicle);
             expect(response).toEqual({ id: result.insertId });
             expect(db.promise().query).toHaveBeenCalledWith(
                 `INSERT INTO vehicles (brand, model, year, license_plate, mileage, fuel_type, user_id) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-                [vehicle.brand, vehicle.model, vehicle.year, vehicle.license_plate.toUpperCase(), vehicle.mileage, vehicle.fuel_type, user_id]
+                [vehicle.brand, vehicle.model, vehicle.year, vehicle.license_plate.toUpperCase(), vehicle.mileage, vehicle.fuel_type, vehicle.user_id]
             );
         });
     });
@@ -41,18 +40,81 @@ describe('VehicleService', () => {
         });
     });
 
-    describe('getAll', () => {
-        it('deve retornar uma lista de veiculos com total', async () => {
-            const vehicles: IVehicle[] = [{ id: 1, brand: 'BrandX', model: 'ModelY', year: 2020, license_plate: 'ABC-1234', mileage: 10000, fuel_type: 'gasoline' }];
-            const total = 1;
+    describe("getAll", () => {
+        it("deve retornar todos os veiculos sem filtros", async () => {
+            const mockVehicle = [{ id: 1, brand: 'BrandX', model: 'ModelY', year: 2020, license_plate: 'ABC-1234', mileage: 10000, fuel_type: 'gasoline' }];
+            const mockTotal = [{ total: 1 }];
 
-            (db.promise().query as jest.Mock)
-                .mockResolvedValueOnce([[{ total }]])
-                .mockResolvedValueOnce([vehicles]);
+            jest.spyOn(db, 'promise').mockReturnValue({
+                query: jest.fn()
+                    .mockResolvedValueOnce([[]])
+                    .mockResolvedValueOnce([mockTotal]) // Retorno da contagem total
+                    .mockResolvedValueOnce([mockVehicle]) // Retorno dos veiculos
+            } as any);
 
-            const response = await VehicleService.getAll();
-            expect(response).toEqual({ vehicles, total });
-            expect(db.promise().query).toHaveBeenCalledTimes(2);
+            const result = await VehicleService.getAll(1, 10, {}, 1);
+            expect(result).toEqual({ vehicles: mockVehicle, total: 1 });
+        });
+
+        it("deve aplicar filtros corretamente", async () => {
+            const mockVehicle = [{ id: 2, brand: 'BrandX', model: 'ModelY', year: 2020, license_plate: 'ABC-1234', mileage: 10000, fuel_type: 'gasoline' }];
+            const mockTotal = [{ total: 1 }];
+
+            jest.spyOn(db, 'promise').mockReturnValue({
+                query: jest.fn()
+                    .mockResolvedValueOnce([[]])
+                    .mockResolvedValueOnce([mockTotal])
+                    .mockResolvedValueOnce([mockVehicle])
+            } as any);
+
+            const filters = { license_plate: "ABC-1234", brand: "BrandX" };
+            const result = await VehicleService.getAll(1, 10, filters, 2);
+            expect(result).toEqual({ vehicles: mockVehicle, total: 1 });
+        });
+
+        it("deve permitir que um gerente veja os registros dos subordinados", async () => {
+            const mockManager = [{ id: 3 }]; // Simula IDs de subordinados
+            const mockVehicle = [{ id: 3, brand: 'BrandX', model: 'ModelY', year: 2020, license_plate: 'ABC-1234', mileage: 10000, fuel_type: 'gasoline', user_id: 1 }];
+            const mockTotal = [{ total: 1 }];
+
+            jest.spyOn(db, 'promise').mockReturnValue({
+                query: jest.fn()
+                    .mockResolvedValueOnce([mockManager]) // Simula que o usuário é gerente
+                    .mockResolvedValueOnce([mockTotal])
+                    .mockResolvedValueOnce([mockVehicle])
+            } as any);
+
+            const result = await VehicleService.getAll(1, 10, {}, 5);
+            expect(result).toEqual({ vehicles: mockVehicle, total: 1 });
+        });
+
+        it("deve permitir que um usuário comum veja apenas seus próprios registros", async () => {
+
+            const mockVehicle = [{ id: 3, brand: 'BrandX', model: 'ModelY', year: 2020, license_plate: 'ABC-1234', mileage: 10000, fuel_type: 'gasoline', user_id: 1 }];
+            const mockTotal = [{ total: 1 }];
+
+            jest.spyOn(VehicleService, 'getUserAccessScope').mockResolvedValue({
+                query: ` AND user_id = ?`,
+                countQuery: ` AND user_id = ?`,
+                queryParams: [10],
+            });
+
+            jest.spyOn(db, 'promise').mockReturnValue({
+                query: jest.fn()
+                    .mockResolvedValueOnce([mockTotal])
+                    .mockResolvedValueOnce([mockVehicle])
+            } as any);
+
+            const result = await VehicleService.getAll(1, 10, {}, 10);
+            expect(result).toEqual({ vehicles: mockVehicle, total: 1 });
+        });
+
+        it("deve lidar com erros do banco de dados", async () => {
+            jest.spyOn(db, 'promise').mockReturnValue({
+                query: jest.fn().mockRejectedValue(new Error("Erro ao buscar veículos. Tente novamente mais tarde."))
+            } as any);
+
+            await expect(VehicleService.getAll(1, 10, {}, 4)).rejects.toThrow(new Error("Erro ao buscar veículos. Tente novamente mais tarde."));
         });
     });
 

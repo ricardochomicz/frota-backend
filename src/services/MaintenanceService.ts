@@ -1,16 +1,17 @@
 import IMaintenance from "../models/Maintenance";
 import db from "../config/db";
 import moment from "moment";
+import BaseService from "./BaseService";
 const PAGE = 1;
 const LIMIT = 10;
-class MaintenanceService {
+class MaintenanceService extends BaseService {
 
     static async create(maintenance: IMaintenance) {
         try {
             const date_format = moment().format('YYYY-MM-DD');
-            const { vehicle_id, user_id, type, description, mileage_at_maintenance } = maintenance;
-            const query = `INSERT INTO maintenance (vehicle_id, user_id, type, description, mileage_at_maintenance, date) VALUES (?, ?, ?, ?, ?, ?)`;
-            const [result]: any = await db.promise().query(query, [vehicle_id, user_id, type, description, mileage_at_maintenance, date_format]);
+            const { vehicle_id, type, description, mileage_at_maintenance, user_id } = maintenance;
+            const query = `INSERT INTO maintenance (vehicle_id, type, description, mileage_at_maintenance, date, user_id) VALUES (?, ?, ?, ?, ?, ?)`;
+            const [result]: any = await db.promise().query(query, [vehicle_id, type, description, mileage_at_maintenance, date_format, user_id]);
             return { id: result.insertId }
         } catch (error) {
             throw new Error('Erro na requisição. Tente novamente mais tarde.');
@@ -20,7 +21,7 @@ class MaintenanceService {
     static async getAll(
         page = PAGE,
         limit = LIMIT,
-        filters: { type?: string, startDate?: Date, endDate?: Date, license_plate?: string } = {}): Promise<{ maintenances: IMaintenance[], total: number }> {
+        filters: { type?: string, startDate?: Date, endDate?: Date, license_plate?: string } = {}, userId?: any): Promise<{ maintenances: IMaintenance[], total: number }> {
         const offset = (Math.max(1, Number(page)) - 1) * Math.max(1, Number(limit));
 
         let query = `
@@ -63,6 +64,8 @@ class MaintenanceService {
             countQuery += ` AND date <= ?`;
             queryParams.push(filters.endDate);
         }
+
+        this.getUserAccessScope(userId);
 
 
         query += ` LIMIT ? OFFSET ?`;
@@ -124,8 +127,8 @@ class MaintenanceService {
         const query = `UPDATE maintenance SET vehicle_id = ?, type = ?, description = ?, mileage_at_maintenance = ?, user_id = ? WHERE id = ?`;
         try {
             await db.promise().query(query, [vehicle_id, type, description, mileage_at_maintenance, user_id, id]);
-            const updatedMaintenance = await this.getMaintenanceWithVehicle(id);
-            return updatedMaintenance;
+            // const updatedMaintenance = await this.getMaintenanceWithVehicle(id);
+            // return updatedMaintenance;
         } catch (error) {
             throw new Error('Erro ao atualizar manutenção. Tente novamente mais tarde.');
         }

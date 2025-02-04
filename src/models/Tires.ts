@@ -5,6 +5,7 @@ interface ITires {
     model: string;
     price: string;
     user_id?: number;
+    status?: string;
 }
 
 export default ITires;

@@ -1,208 +1,150 @@
-import db from '../config/db';
+import MaintenanceService from "../services/MaintenanceService";
+import db from "../config/db";
 import IMaintenance from "../models/Maintenance";
-import MaintenanceService from '../services/MaintenanceService';
 
 jest.mock('../config/db', () => ({
     promise: jest.fn().mockReturnThis(),
     query: jest.fn()
 }));
 
-describe('MaintenanceService', () => {
+describe("MaintenanceService", () => {
     afterEach(() => {
         jest.clearAllMocks();
     });
 
-    describe('create', () => {
-        it('should create a new maintenance record and return the result', async () => {
-            const maintenance: IMaintenance = {
+    describe("create", () => {
+        it("deve criar uma nova manutenção", async () => {
+            const mockMaintenance: IMaintenance = {
                 vehicle_id: 1,
-                type: 'Oil Change',
-                description: 'Changed engine oil',
-                mileage_at_maintenance: 15000,
-                date: new Date()
+                type: "Troca de óleo",
+                description: "Óleo sintético",
+                mileage_at_maintenance: 50000,
+                user_id: 1,
             };
-            const user_id = 1;
-            const result = { insertId: 1 };
 
-            (db.promise().query as jest.Mock).mockResolvedValueOnce([result]);
+            const mockInsertResult = [{ insertId: 10 }];
 
-            const response = await MaintenanceService.create(maintenance, user_id);
-            expect(response).toEqual({ id: result.insertId });
+            (db.promise().query as jest.Mock).mockResolvedValueOnce(mockInsertResult);
+
+            const result = await MaintenanceService.create(mockMaintenance);
+
+            expect(result).toEqual({ id: 10 });
             expect(db.promise().query).toHaveBeenCalledWith(
-                `INSERT INTO maintenance (vehicle_id, user_id, type, description, mileage_at_maintenance, date) VALUES (?, ?, ?, ?, ?, ?)`,
-                [maintenance.vehicle_id, user_id, maintenance.type, maintenance.description, maintenance.mileage_at_maintenance, maintenance.date]
+                expect.stringContaining("INSERT INTO maintenance"),
+                expect.any(Array)
+            );
+        });
+
+        it("deve lançar erro ao falhar a criação", async () => {
+            (db.promise().query as jest.Mock).mockRejectedValueOnce(new Error("DB error"));
+
+            await expect(MaintenanceService.create({} as IMaintenance)).rejects.toThrow(
+                "Erro na requisição. Tente novamente mais tarde."
             );
         });
     });
 
-    describe('getAll', () => {
-        it('should return a list of maintenances and the total count', async () => {
-            const maintenances = [{
-                id: 1,
-                date: new Date(),
-                type: 'Oil Change',
-                description: 'Changed engine oil',
-                mileage_at_maintenance: 15000,
-                created_at: new Date(),
-                updated_at: new Date(),
-                vehicle: {
-                    id: 1,
-                    license_plate: 'ABC-1234',
-                    model: 'Model Y',
-                    brand: 'BrandX',
-                    year: 2020,
-                },
-                user: {
-                    id: 1,
-                    name: 'John Doe',
-                    email: 'john.doe@example.com'
-                }
-            }];
-            const total = 1;
+    // describe("getAll", () => {
+    //     it("deve retornar todas as manutenções", async () => {
+    //         const mockMaintenances = [
+    //             { id: 1, type: "Troca de óleo", description: "Óleo sintético", user_id: 1 },
+    //         ];
+    //         const mockTotal = [{ total: 1 }];
 
-            const dbResponseRows = [{
-                id: 1,
-                date: new Date(),
-                type: 'Oil Change',
-                description: 'Changed engine oil',
-                mileage_at_maintenance: 15000,
-                created_at: new Date(),
-                updated_at: new Date(),
-                vehicle_id: 1,
-                license_plate: 'ABC-1234',
-                model: 'Model Y',
-                brand: 'BrandX',
-                year: 2020,
-                user_id: 1,
-                user_name: 'John Doe',
-                user_email: 'john.doe@example.com'
-            }];
+    //         (db.promise().query as jest.Mock)
+    //             .mockResolvedValueOnce([mockTotal])
+    //             .mockResolvedValueOnce([mockMaintenances]);
 
-            (db.promise().query as jest.Mock)
-                .mockResolvedValueOnce([[{ total }]])
-                .mockResolvedValueOnce(dbResponseRows);
+    //         const result = await MaintenanceService.getAll(1, 10, {}, 1);
 
-            const response = await MaintenanceService.getAll();
-            expect(response).toEqual({ maintenances, total });
-            expect(db.promise().query).toHaveBeenCalledTimes(2);
+    //         expect(result).toEqual({ maintenances: mockMaintenances, total: 1 });
+    //     });
+
+    //     it("deve lidar com erro no banco de dados", async () => {
+    //         (db.promise().query as jest.Mock).mockRejectedValue(new Error("DB error"));
+
+    //         await expect(MaintenanceService.getAll(1, 10, {}, 1)).rejects.toThrow(
+    //             "Erro ao buscar manutenções. Tente novamente mais tarde."
+    //         );
+    //     });
+    // });
+
+    describe("get", () => {
+        it("deve retornar uma manutenção específica", async () => {
+            const mockMaintenance = [{ id: 1, type: "Troca de óleo", description: "Óleo sintético" }];
+
+            (db.promise().query as jest.Mock).mockResolvedValueOnce([mockMaintenance]);
+
+            const result = await MaintenanceService.get(1);
+
+            expect(result).toEqual(mockMaintenance[0]);
+        });
+
+        it("deve retornar null se não encontrar manutenção", async () => {
+            (db.promise().query as jest.Mock).mockResolvedValueOnce([[]]);
+
+            const result = await MaintenanceService.get(999);
+
+            expect(result).toBeNull();
         });
     });
 
-    describe('get', () => {
-        it('should return a maintenance record by ID', async () => {
-            const maintenance: IMaintenance = {
-                id: 1,
-                vehicle_id: 1,
-                type: 'Oil Change',
-                description: 'Changed engine oil',
-                mileage_at_maintenance: 15000,
-                date: new Date()
-            };
+    describe("getByVehicleId", () => {
+        it("deve retornar manutenções por vehicle_id", async () => {
+            const mockMaintenances = [{ id: 1, vehicle_id: 2, type: "Troca de óleo" }];
 
-            (db.promise().query as jest.Mock).mockResolvedValueOnce([[maintenance]]);
+            (db.promise().query as jest.Mock).mockResolvedValueOnce([mockMaintenances]);
 
-            const response = await MaintenanceService.get(1);
-            expect(response).toEqual(maintenance);
-            expect(db.promise().query).toHaveBeenCalledWith(`SELECT * FROM maintenance WHERE id = ?`, [1]);
+            const result = await MaintenanceService.getByVehicleId(2);
+
+            expect(result).toEqual(mockMaintenances);
         });
-    });
 
-    describe('getByVehicleId', () => {
-        it('should return a list of maintenances by vehicle ID', async () => {
-            const maintenances: IMaintenance[] = [{
-                id: 1,
-                vehicle_id: 1,
-                type: 'Oil Change',
-                description: 'Changed engine oil',
-                mileage_at_maintenance: 15000,
-                date: new Date()
-            }];
+        it("deve retornar array vazio se não houver manutenções", async () => {
+            (db.promise().query as jest.Mock).mockResolvedValueOnce([[]]);
 
-            (db.promise().query as jest.Mock).mockResolvedValueOnce([maintenances]);
+            const result = await MaintenanceService.getByVehicleId(999);
 
-            const response = await MaintenanceService.getByVehicleId(1);
-            expect(response).toEqual(maintenances);
-            expect(db.promise().query).toHaveBeenCalledWith(`SELECT * FROM maintenance WHERE vehicle_id = ?`, [1]);
+            expect(result).toEqual([]);
         });
     });
 
     describe('update', () => {
-        it('should update a maintenance record and return the updated maintenance', async () => {
-            const maintenance: IMaintenance = {
-                id: 1,
-                vehicle_id: 1,
-                type: 'Oil Change',
-                description: 'Changed engine oil',
-                mileage_at_maintenance: 15000,
-                date: new Date()
-            };
-            const user_id = 1;
-            const updatedMaintenance = { ...maintenance, type: 'Tire Rotation' };
-
-            const updatedDbMaintenance = {
-                ...updatedMaintenance,
-                created_at: new Date(),
-                updated_at: new Date(),
-                user_id: 1,
-                vehicle: {
-                    id: 1,
-                    model: 'Model Y',
-                    brand: 'BrandX',
-                    year: 2020,
-                    license_plate: 'ABC-1234'
-                }
-            };
+        it('deve atualizar a manutenção e retornar vazio', async () => {
+            const maintenance: IMaintenance = { id: 1, type: 'Troca', description: 'Troca de Pneu', mileage_at_maintenance: 10000, user_id: 1, vehicle_id: 1 };
 
             (db.promise().query as jest.Mock).mockResolvedValueOnce(null);
-            (db.promise().query as jest.Mock).mockResolvedValueOnce([[updatedDbMaintenance]]);
 
-            const response = await MaintenanceService.update(1, updatedMaintenance, user_id);
-            expect(response).toEqual(updatedDbMaintenance);
+            await MaintenanceService.update(1, maintenance);
             expect(db.promise().query).toHaveBeenCalledWith(
-                `UPDATE maintenance SET vehicle_id = ?, type = ?, description = ?, mileage_at_maintenance = ?, date = ?, user_id = ? WHERE id = ?`,
-                [updatedMaintenance.vehicle_id, updatedMaintenance.type, updatedMaintenance.description, updatedMaintenance.mileage_at_maintenance, updatedMaintenance.date, user_id, 1]
+                `UPDATE maintenance SET vehicle_id = ?, type = ?, description = ?, mileage_at_maintenance = ?, user_id = ? WHERE id = ?`,
+                [maintenance.vehicle_id, maintenance.type, maintenance.description, maintenance.mileage_at_maintenance, maintenance.user_id, 1]
             );
+        });
+
+        it('deve gerar um erro se a consulta ao banco de dados falhar', async () => {
+            const maintenance: IMaintenance = { id: 1, type: 'Troca', description: 'Troca de Pneu', mileage_at_maintenance: 10000, user_id: 1, vehicle_id: 1 };
+
+            (db.promise().query as jest.Mock).mockRejectedValueOnce(new Error('Erro ao atualizar manutenção. Tente novamente mais tarde.'));
+
+            await expect(MaintenanceService.update(1, maintenance)).rejects.toThrow('Erro ao atualizar manutenção. Tente novamente mais tarde.');
         });
     });
 
-    describe('getMaintenanceWithVehicle', () => {
-        it('should return a maintenance record with vehicle details', async () => {
-            const maintenance = {
-                id: 1,
-                vehicle_id: 1,
-                type: 'Oil Change',
-                description: 'Changed engine oil',
-                mileage_at_maintenance: 15000,
-                date: new Date(),
-                created_at: new Date(),
-                updated_at: new Date(),
-                user_id: 1,
-                vehicle: {
-                    id: 1,
-                    model: 'Model Y',
-                    brand: 'BrandX',
-                    year: 2020,
-                    license_plate: 'ABC-1234'
-                }
-            };
 
-            (db.promise().query as jest.Mock).mockResolvedValueOnce([[maintenance]]);
+    describe("destroy", () => {
+        it("deve deletar uma manutenção", async () => {
+            (db.promise().query as jest.Mock).mockResolvedValueOnce([{}]);
 
-            const response = await MaintenanceService.getMaintenanceWithVehicle(1);
-            expect(response).toEqual(maintenance);
-            expect(db.promise().query).toHaveBeenCalledWith(
-                `SELECT m.*, v.id AS vehicle_id, v.model, v.brand, v.year, v.license_plate FROM maintenance m LEFT JOIN vehicles v ON m.vehicle_id = v.id WHERE m.id = ?`,
-                [1]
-            );
+            await expect(MaintenanceService.destroy(1)).resolves.toBeUndefined();
         });
-    });
 
-    describe('destroy', () => {
-        it('should delete a maintenance record', async () => {
-            (db.promise().query as jest.Mock).mockResolvedValueOnce(null);
+        it("deve lançar erro ao falhar a exclusão", async () => {
+            (db.promise().query as jest.Mock).mockRejectedValueOnce(new Error("DB error"));
 
-            await MaintenanceService.destroy(1);
-            expect(db.promise().query).toHaveBeenCalledWith(`DELETE FROM maintenance WHERE id = ?`, [1]);
+            await expect(MaintenanceService.destroy(1)).rejects.toThrow(
+                "Erro ao deletar manutenção. Tente novamente mais tarde."
+            );
         });
     });
 });

@@ -1,25 +1,25 @@
 
 import db from '../config/db';
 import IVehicle from "../models/Vehicle";
+import BaseService from './BaseService';
 
 const LIMIT = 5;
 const PAGE = 1;
 
-class VehicleService {
+class VehicleService extends BaseService {
     /**
      * Cria um novo veículo no banco de dados.
      * @param vehicle Dados do veículo
      * @returns Retorna o ID do veículo inserido
      */
-    static async create(vehicle: IVehicle, user_id: number): Promise<{ id: number }> {
+    static async create(vehicle: IVehicle): Promise<{ id: number }> {
 
-        const { brand, model, year, license_plate, mileage, fuel_type } = vehicle;
+        const { brand, model, year, license_plate, mileage, fuel_type, user_id } = vehicle;
 
-        const uppercaseLicensePlate = license_plate.toUpperCase();
         const query = `INSERT INTO vehicles (brand, model, year, license_plate, mileage, fuel_type, user_id) VALUES (?, ?, ?, ?, ?, ?, ?)`;
 
         try {
-            const [result]: any = await db.promise().query(query, [brand, model, year, uppercaseLicensePlate, mileage, fuel_type, user_id]);
+            const [result]: any = await db.promise().query(query, [brand, model, year, license_plate, mileage, fuel_type, user_id]);
             return { id: result.insertId };
         } catch (error) {
             throw new Error('Erro ao criar veículo. Tente novamente mais tarde.');
@@ -46,7 +46,7 @@ class VehicleService {
      * 
      * @returns Retorna uma lista com todos os veículos cadastrados
      */
-    static async getAll(page = PAGE, limit = LIMIT, filters: { license_plate?: string; brand?: string; model?: string } = {}): Promise<{ vehicles: IVehicle[], total: number }> {
+    static async getAll(page = PAGE, limit = LIMIT, filters: { license_plate?: string; brand?: string; model?: string } = {}, userId?: any): Promise<{ vehicles: IVehicle[], total: number }> {
         const offset = (Math.max(1, Number(page)) - 1) * Math.max(1, Number(limit));
 
         let query = `SELECT * FROM vehicles WHERE 1=1`;
@@ -68,6 +68,8 @@ class VehicleService {
             countQuery += ` AND model LIKE ?`;
             queryParams.push(`%${filters.model}%`);
         }
+
+        this.getUserAccessScope(userId);
 
         query += ` LIMIT ? OFFSET ?`;
         queryParams.push(limit, offset);
@@ -135,6 +137,7 @@ class VehicleService {
             throw new Error('Erro ao deletar veículo. Tente novamente mais tarde.');
         }
     }
+
 
 }
 
