@@ -1,18 +1,36 @@
 import db from "../config/db";
 import IVehicleTires from "../models/VehicleTires";
+import moment from "moment";
 
 class VehicleTiresService {
 
-    static async create(vehicleTires: IVehicleTires, user_id: number): Promise<{ id: number }> {
-        const { vehicle_id, tire_id, installation_date, mileage_at_installation, predicted_replacement_mileage } = vehicleTires;
-        const query = `INSERT INTO vehicle_tires (vehicle_id, tire_id, installation_date, mileage_at_installation, predicted_replacement_mileage, user_id) VALUES (?, ?, ?, ?, ?, ?)`;
+    static async create(vehicleTiresArray: IVehicleTires[]): Promise<IVehicleTires[]> {
+        const query = `INSERT INTO vehicle_tires (vehicle_id, tire_id, installation_date, mileage_at_installation, predicted_replacement_mileage, user_id) VALUES ?`;
+
+        // Mapeia os valores para inserção
+        const values = vehicleTiresArray.map(tire => [
+            tire.vehicle_id,
+            tire.tire_id,
+            tire.installation_date, // Certifica-se de que a data está formatada corretamente
+            tire.mileage_at_installation,
+            tire.predicted_replacement_mileage,
+            tire.user_id
+        ]);
+
         try {
-            const [result]: any = await db.promise().query(query, [vehicle_id, tire_id, installation_date, mileage_at_installation, predicted_replacement_mileage, user_id]);
-            return { id: result.insertId };
+            const [result]: any = await db.promise().query(query, [values]);
+
+            // Retorna o array dos pneus inseridos, adicionando os IDs gerados
+            return vehicleTiresArray.map((tire, i) => ({
+                ...tire,
+                id: result.insertId + i // Garante que cada objeto tem um ID único
+            }));
         } catch (error) {
-            throw new Error('Erro na requisição. Tente novamente mais tarde.');
+            throw new Error('Erro ao inserir os pneus. Tente novamente mais tarde.');
         }
     }
+
+
 
 
 
@@ -22,7 +40,8 @@ class VehicleTiresService {
      * @returns 
      */
     static async getTiresByVehicleId(vehicle_id: number): Promise<IVehicleTires | null> {
-        const query = `SELECT * FROM vehicle_tires WHERE vehicle_id = ?`;
+        const query = "SELECT vt.*, t.code, t.brand, t.model FROM vehicle_tires vt INNER JOIN tires t ON vt.tire_id = t.id WHERE vt.vehicle_id = ?";
+
 
         try {
             const [rows]: any = await db.promise().query(query, [vehicle_id]);
@@ -82,6 +101,10 @@ class VehicleTiresService {
             console.error(`[ERRO] Falha ao remover pneu: ${error.message}`, error);
             throw new Error("Erro ao remover pneu. Tente novamente mais tarde.");
         }
+    }
+
+    private static async formatDate(date: any) {
+        return moment(date).format('YYYY-MM-DD');
     }
 
 }

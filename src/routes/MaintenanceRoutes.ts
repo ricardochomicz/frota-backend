@@ -1,6 +1,8 @@
 import express from 'express';
 import MaintenanceController from '../controllers/MaintenanceController';
 import { authMiddleware } from '../middlewares/AuthMiddleware';
+import { validate } from '../middlewares/Validate';
+import { maintenanceSchema } from '../schemas/MaintenanceSchema';
 
 const router = express.Router();
 
@@ -26,7 +28,7 @@ router.get('/maintenances/:id', authMiddleware, MaintenanceController.get);
  * @route PUT /maintenances/:id
  * @description Atualiza uma manutenção pelo ID
  */
-router.put('/maintenances/:id/edit', authMiddleware, MaintenanceController.update);
+router.put('/maintenances/:id/edit', authMiddleware, validate(maintenanceSchema), MaintenanceController.update);
 
 router.delete('/maintenances/:id/delete', authMiddleware, MaintenanceController.destroy);
 

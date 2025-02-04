@@ -31,7 +31,7 @@ class TiresService {
      * 
      * @returns Retorna uma lista com todos os pneus cadastrados
      */
-    static async getAll(page = PAGE, limit = LIMIT, filters: { code?: string; brand?: string; model?: string } = {}): Promise<{ tires: ITires[], total: number }> {
+    static async getAll(page = PAGE, limit = LIMIT, filters: { code?: string; brand?: string; model?: string } = {}, userId: any): Promise<{ tires: ITires[], total: number }> {
         const offset = (Math.max(1, Number(page)) - 1) * Math.max(1, Number(limit));
 
         let query = `SELECT * FROM tires WHERE 1=1`;
@@ -54,6 +54,22 @@ class TiresService {
             queryParams.push(`%${filters.model}%`);
         }
 
+        const [managerResults]: any = await db.promise().query(
+            `SELECT id FROM users WHERE manager_id = ?`,
+            [userId]
+        );
+        if (managerResults.length > 0) {
+            // Se o usuário logado é um manager, ele pode ver seus próprios registros e os dos subordinados
+            const subordinateIds = managerResults.map((user: any) => user.id); // IDs dos subordinados
+            query += ` AND (user_id = ? OR user_id IN (?))`; // Filtra registros do usuário ou dos subordinados
+            countQuery += ` AND (user_id = ? OR user_id IN (?))`;
+            queryParams.push(userId, subordinateIds);
+        } else {
+            // Se o usuário logado não é um manager, ele só pode ver seus próprios registros
+            query += ` AND user_id = ?`; // Filtra apenas os registros do usuário logado
+            countQuery += ` AND user_id = ?`;
+            queryParams.push(userId);
+        }
         query += ` LIMIT ? OFFSET ?`;
         queryParams.push(limit, offset);
 
@@ -91,13 +107,27 @@ class TiresService {
      * @returns 
      */
     static async getTiresByCode(code: string): Promise<ITires | null> {
-        const query = `SELECT * FROM tires WHERE code = ?`;
+        const checkQuery = `
+            SELECT COUNT(*) AS count
+            FROM vehicle_tires vt
+            JOIN tires t ON vt.tire_id = t.id
+            WHERE t.code = ?
+        `;
 
         try {
+            const [checkRows]: any = await db.promise().query(checkQuery, [code]);
+
+            // Se o pneu estiver associado a algum veículo, não pode ser retornado
+            if (checkRows[0].count > 0) {
+                throw new Error('Pneu já está associado a um veículo.');
+            }
+
+            const query = `SELECT * FROM tires WHERE code = ?`;
+
             const [rows]: any = await db.promise().query(query, [code]);
             return rows[0] || null;
         } catch (error) {
-            throw new Error('Erro ao buscar pneu. Tente novamente mais tarde.');
+            throw new Error('Erro ao buscar pneus. Tente novamente mais tarde.');
         }
     }
 

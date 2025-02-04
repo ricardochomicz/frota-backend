@@ -22,6 +22,8 @@ class TiresController {
                 return;
             }
 
+
+
             // Criação do pneu no banco de dados
             const result = await TiresService.create(tires, req.user.userId);
             res.status(201).json({ message: 'Pneu cadastrado com sucesso', data: result });
@@ -43,8 +45,10 @@ class TiresController {
             model: req.query.model as string || undefined
         };
 
+
+
         try {
-            const { tires, total } = await TiresService.getAll(page, limit, filters);
+            const { tires, total } = await TiresService.getAll(page, limit, filters, req.user.userId);
             res.status(200).json({
                 data: tires,
                 total,
@@ -76,14 +80,13 @@ class TiresController {
     static async getTiresByCode(req: Request, res: Response): Promise<void> {
         try {
             const { code } = req.params;
-            const tires = await TiresService.getTiresByCode(code);
-            if (!tires) {
-                res.status(404).json({ error: 'Pneu não encontrado' });
-
+            const tire = await TiresService.getTiresByCode(code);
+            if (!tire) {
+                res.status(404).json({ error: 'Pneu não encontrado' }); // Retorne aqui para evitar múltiplas respostas
             }
-            res.status(200).json({ data: tires });
+            res.status(200).json({ data: tire }); // Retorne aqui para evitar múltiplas respostas
         } catch (err: any) {
-            res.status(500).json({ error: 'Erro ao buscar pneu', details: err.message });
+            res.status(500).json({ error: `Pneu informado já está em uso em outro veículo` }); // Retorne aqui para evitar múltiplas respostas
         }
     }
 

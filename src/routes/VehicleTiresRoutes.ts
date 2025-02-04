@@ -10,6 +10,6 @@ router.post('/vehicle-tires', authMiddleware, validate(vehicleTiresSchema), Vehi
 
 router.get('/vehicle-tires/:vehicle_id', authMiddleware, VehicleTiresController.getTiresByVehicleId);
 
-router.delete('/vehicle-tires/:tire_id', authMiddleware, VehicleTiresController.dischargeTire);
+router.delete('/vehicle-tires/:tire_id/delete', authMiddleware, VehicleTiresController.dischargeTire);
 
 export default router;

@@ -13,7 +13,7 @@ class MaintenanceController {
             }
 
             const maintenance = maintenanceSchema.parse(req.body);
-            const result = await MaintenanceService.create(maintenance, req.user.userId);
+            const result = await MaintenanceService.create(maintenance);
 
             const maintenanceDetails = await MaintenanceService.getMaintenanceWithVehicle(result.id);
             res.status(201).json({ message: 'Manutenção cadastrada com sucesso', data: maintenanceDetails });
@@ -66,14 +66,11 @@ class MaintenanceController {
 
     static async update(req: Request, res: Response): Promise<void> {
         try {
-            if (!req.user) {
-                res.status(401).json({ error: "Usuário não autenticado" });
-                return;
-            }
             const { id } = req.params;
             const maintenance = maintenanceSchema.parse(req.body);
-            const result = await MaintenanceService.update(Number(id), maintenance, req.user.userId);
-            res.status(200).json({ message: 'Manutenção atualizada com sucesso', data: result });
+            const result = await MaintenanceService.update(Number(id), maintenance);
+            const maintenanceDetails = await MaintenanceService.getMaintenanceWithVehicle(result.id);
+            res.status(200).json({ message: 'Manutenção atualizada com sucesso', data: maintenanceDetails });
         } catch (err: any) {
             if (err.name === "ZodError") {
                 res.status(400).json({ error: 'Erro de validação', details: err.errors });

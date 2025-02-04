@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const vehicleTiresSchema = z.object({
+export const vehicleTiresSchema = z.array(z.object({
     vehicle_id: z.preprocess(
         (val) => Number(val),
         z.number().min(1, { message: "O veículo é obrigatório e deve ser um número válido" })
@@ -21,4 +21,4 @@ export const vehicleTiresSchema = z.object({
         (val) => Number(val),
         z.number().min(0, { message: "KM de substituição deve ser um número válido" })
     )
-});
+}));

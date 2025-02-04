@@ -11,27 +11,33 @@ class VehicleTiresController {
                 res.status(401).json({ error: "Usuário não autenticado" });
                 return;
             }
-            // Validação da entrada
-            const vehicleTires = vehicleTiresSchema.parse(req.body);
 
-            //Verifica se o pneu já está cadastrado em um veículo.
-            const tiresExistsForVehicle = await VehicleTiresService.isTireAssignedToAnotherVehicle(vehicleTires.tire_id, vehicleTires.vehicle_id);
-            if (tiresExistsForVehicle) {
-                res.status(400).json({ error: 'Pneu ja cadastrado neste ou em outro veículo, por favor de baixa para continuar.' });
-                return;
+            // Validação da entrada (esperando um array)
+            const vehicleTiresArray = vehicleTiresSchema.parse(req.body);
+
+            // Verifica se algum dos pneus já está cadastrado em outro veículo
+            for (const tire of vehicleTiresArray) {
+                const tireExists = await VehicleTiresService.isTireAssignedToAnotherVehicle(tire.tire_id, tire.vehicle_id);
+                if (tireExists) {
+                    res.status(400).json({ error: `O pneu já está cadastrado neste ou em outro veículo. Por favor, dê baixa para continuar.` });
+                    return;
+                }
             }
 
-            // Criação do veículo no banco de dados
-            const result = await VehicleTiresService.create(vehicleTires, req.user.userId);
-            res.status(201).json({ message: 'Pneu adicionado ao veículo com sucesso', data: result });
+            // Criação dos pneus no banco de dados
+            const result = await VehicleTiresService.create(vehicleTiresArray);
+
+            res.status(201).json({ message: 'Pneus adicionados ao veículo com sucesso', data: result });
 
         } catch (err: any) {
             if (err.name === "ZodError") {
                 res.status(400).json({ error: 'Erro de validação', details: err.errors });
+                return;
             }
             res.status(500).json({ error: 'Erro interno', details: err.message });
         }
     }
+
 
     static async getTiresByVehicleId(req: Request, res: Response): Promise<void> {
         try {

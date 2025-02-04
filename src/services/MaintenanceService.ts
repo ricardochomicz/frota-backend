@@ -1,14 +1,16 @@
 import IMaintenance from "../models/Maintenance";
 import db from "../config/db";
+import moment from "moment";
 const PAGE = 1;
 const LIMIT = 10;
 class MaintenanceService {
 
-    static async create(maintenance: IMaintenance, user_id: number) {
+    static async create(maintenance: IMaintenance) {
         try {
-            const { vehicle_id, type, description, mileage_at_maintenance, date } = maintenance;
+            const date_format = moment().format('YYYY-MM-DD');
+            const { vehicle_id, user_id, type, description, mileage_at_maintenance } = maintenance;
             const query = `INSERT INTO maintenance (vehicle_id, user_id, type, description, mileage_at_maintenance, date) VALUES (?, ?, ?, ?, ?, ?)`;
-            const [result]: any = await db.promise().query(query, [vehicle_id, user_id, type, description, mileage_at_maintenance, date]);
+            const [result]: any = await db.promise().query(query, [vehicle_id, user_id, type, description, mileage_at_maintenance, date_format]);
             return { id: result.insertId }
         } catch (error) {
             throw new Error('Erro na requisição. Tente novamente mais tarde.');
@@ -117,11 +119,11 @@ class MaintenanceService {
         }
     }
 
-    static async update(id: number, maintenance: IMaintenance, user_id: number) {
-        const { vehicle_id, type, description, mileage_at_maintenance, date } = maintenance;
-        const query = `UPDATE maintenance SET vehicle_id = ?, type = ?, description = ?, mileage_at_maintenance = ?, date = ?, user_id = ? WHERE id = ?`;
+    static async update(id: number, maintenance: IMaintenance) {
+        const { vehicle_id, type, description, mileage_at_maintenance, user_id } = maintenance;
+        const query = `UPDATE maintenance SET vehicle_id = ?, type = ?, description = ?, mileage_at_maintenance = ?, user_id = ? WHERE id = ?`;
         try {
-            await db.promise().query(query, [vehicle_id, type, description, mileage_at_maintenance, date, user_id, id]);
+            await db.promise().query(query, [vehicle_id, type, description, mileage_at_maintenance, user_id, id]);
             const updatedMaintenance = await this.getMaintenanceWithVehicle(id);
             return updatedMaintenance;
         } catch (error) {

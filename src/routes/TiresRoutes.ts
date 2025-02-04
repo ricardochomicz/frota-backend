@@ -25,11 +25,7 @@ router.get('/tires', authMiddleware, TireController.getAll);
  */
 router.get('/tires/:id', authMiddleware, TireController.get);
 
-/**
- * @route GET /tires/code/:code
- * @description Busca um pneu pelo código
- */
-router.get('/tires/code/:code', authMiddleware, TireController.getTiresByCode);
+
 
 /**
  * @route PUT /tires/:id
@@ -38,5 +34,11 @@ router.get('/tires/code/:code', authMiddleware, TireController.getTiresByCode);
 router.put('/tires/:id/edit', authMiddleware, validate(tiresSchema), TireController.update);
 
 router.delete('/tires/:id/delete', authMiddleware, TireController.destroy);
+
+/**
+ * @route GET /tires/code/:code
+ * @description Busca um pneu pelo código
+ */
+router.get('/tires-code/:code', authMiddleware, TireController.getTiresByCode);
 
 export default router;
