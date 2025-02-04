@@ -95,6 +95,7 @@ class MaintenanceService extends BaseService {
                     email: maintenance.user_email
                 }
             }));
+            console.error(formattedRows);
 
             return { maintenances: formattedRows, total };
         } catch (error) {

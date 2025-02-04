@@ -44,30 +44,135 @@ describe("MaintenanceService", () => {
         });
     });
 
-    // describe("getAll", () => {
-    //     it("deve retornar todas as manutenções", async () => {
-    //         const mockMaintenances = [
-    //             { id: 1, type: "Troca de óleo", description: "Óleo sintético", user_id: 1 },
-    //         ];
-    //         const mockTotal = [{ total: 1 }];
+    describe("getAll", () => {
+        afterEach(() => {
+            jest.clearAllMocks();
+        });
 
-    //         (db.promise().query as jest.Mock)
-    //             .mockResolvedValueOnce([mockTotal])
-    //             .mockResolvedValueOnce([mockMaintenances]);
+        it("deve retornar todas as manutenções sem filtros", async () => {
+            const mockMaintenances = [{
+                id: 1,
+                date: new Date(),
+                type: "Oil Change",
+                description: "Changed oil and filter",
+                mileage_at_maintenance: 10000,
+                created_at: new Date(),
+                updated_at: new Date(),
+                vehicle_id: 1,
+                license_plate: "ABC-1234",
+                model: "Sedan",
+                brand: "Toyota",
+                year: 2020,
+                user_id: 1,
+                user_name: "Ricardo Chomicz",
+                user_email: "ricardo@email.com",
+            }];
+            const mockTotal = [{ total: 1 }];
 
-    //         const result = await MaintenanceService.getAll(1, 10, {}, 1);
+            jest.spyOn(db, 'promise').mockReturnValue({
+                query: jest.fn()
+                    .mockResolvedValueOnce([[]])
+                    .mockResolvedValueOnce([mockTotal]) // Retorno da contagem total
+                    .mockResolvedValueOnce([mockMaintenances]) // Retorno das manutenções
+            } as any);
 
-    //         expect(result).toEqual({ maintenances: mockMaintenances, total: 1 });
-    //     });
+            const result = await MaintenanceService.getAll(1, 10, {}, 1);
+            expect(result).toEqual({
+                maintenances: [{
+                    id: 1,
+                    date: mockMaintenances[0].date,
+                    type: "Oil Change",
+                    description: "Changed oil and filter",
+                    mileage_at_maintenance: 10000,
+                    created_at: mockMaintenances[0].created_at,
+                    updated_at: mockMaintenances[0].updated_at,
+                    vehicle: {
+                        id: 1,
+                        license_plate: "ABC-1234",
+                        model: "Sedan",
+                        brand: "Toyota",
+                        year: 2020,
+                    },
+                    user: {
+                        id: 1,
+                        name: "Ricardo Chomicz",
+                        email: "ricardo@email.com",
+                    },
+                }],
+                total: 1,
+            });
+        });
 
-    //     it("deve lidar com erro no banco de dados", async () => {
-    //         (db.promise().query as jest.Mock).mockRejectedValue(new Error("DB error"));
+        it("deve aplicar filtros corretamente", async () => {
+            const mockMaintenances = [{
+                id: 1,
+                date: new Date(),
+                type: "Oil Change",
+                description: "Changed oil and filter",
+                mileage_at_maintenance: 10000,
+                created_at: new Date(),
+                updated_at: new Date(),
+                vehicle_id: 1,
+                license_plate: "ABC-1234",
+                model: "Sedan",
+                brand: "Toyota",
+                year: 2020,
+                user_id: 1,
+                user_name: "Ricardo Chomicz",
+                user_email: "ricardo@email.com",
+            }];
+            const mockTotal = [{ total: 1 }];
 
-    //         await expect(MaintenanceService.getAll(1, 10, {}, 1)).rejects.toThrow(
-    //             "Erro ao buscar manutenções. Tente novamente mais tarde."
-    //         );
-    //     });
-    // });
+            jest.spyOn(MaintenanceService, 'getUserAccessScope').mockResolvedValue({
+                query: ` AND user_id = ?`,
+                countQuery: ` AND user_id = ?`,
+                queryParams: [1],
+            });
+
+            (db.promise().query as jest.Mock)
+                .mockResolvedValueOnce([mockTotal])
+                .mockResolvedValueOnce([mockMaintenances]);
+
+            const filters = { type: "Tire", license_plate: "ABC-1234" };
+            const result = await MaintenanceService.getAll(1, 10, filters, 1);
+            expect(result).toEqual({
+                maintenances: [{
+                    id: 1,
+                    date: mockMaintenances[0].date,
+                    type: "Oil Change",
+                    description: "Changed oil and filter",
+                    mileage_at_maintenance: 10000,
+                    created_at: mockMaintenances[0].created_at,
+                    updated_at: mockMaintenances[0].updated_at,
+                    vehicle: {
+                        id: 1,
+                        license_plate: "ABC-1234",
+                        model: "Sedan",
+                        brand: "Toyota",
+                        year: 2020,
+                    },
+                    user: {
+                        id: 1,
+                        name: "Ricardo Chomicz",
+                        email: "ricardo@email.com",
+                    },
+                }],
+                total: 1,
+            });
+        });
+
+        it("deve lidar com erros do banco de dados", async () => {
+            jest.spyOn(MaintenanceService, 'getUserAccessScope').mockResolvedValue({
+                query: ` AND user_id = ?`,
+                countQuery: ` AND user_id = ?`,
+                queryParams: [1],
+            });
+
+            (db.promise().query as jest.Mock).mockRejectedValue(new Error("DB error"));
+
+            await expect(MaintenanceService.getAll(1, 10, {}, 1)).rejects.toThrow("Erro ao buscar manutenções. Tente novamente mais tarde.");
+        });
+    });
 
     describe("get", () => {
         it("deve retornar uma manutenção específica", async () => {

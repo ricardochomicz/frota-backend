@@ -69,7 +69,7 @@ class MaintenanceController {
             const { id } = req.params;
             const maintenance = maintenanceSchema.parse(req.body);
             const result = await MaintenanceService.update(Number(id), maintenance);
-            const maintenanceDetails = await MaintenanceService.getMaintenanceWithVehicle(result.id);
+            const maintenanceDetails = await MaintenanceService.getMaintenanceWithVehicle(Number(id));
             res.status(200).json({ message: 'Manutenção atualizada com sucesso', data: maintenanceDetails });
         } catch (err: any) {
             if (err.name === "ZodError") {
