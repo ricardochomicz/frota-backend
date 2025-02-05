@@ -104,7 +104,7 @@ class TiresController {
             if (err.name === "ZodError") {
                 res.status(400).json({ error: 'Erro de validação', details: err.errors });
             }
-            res.status(500).json({ error: 'Erro interno', details: err.message });
+            res.status(500).json({ error: 'Erro interno', details: err.message, e: err.error });
         }
     }
 

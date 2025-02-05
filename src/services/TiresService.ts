@@ -1,12 +1,13 @@
 import db from '../config/db';
-import ITires from "../models/Tires";
-import { getAuthenticatedUser } from '../auth/generateAndVerifyToken';
-import { Request } from 'express';
+import { ITires, TireCheckResult } from "../models/Tires";
+import { setupWebSocket } from '../websocket';
 import BaseService from './BaseService';
-import { IUser } from '../models/User';
+import NotificationService from './notifications/NotificationTiresService';
+import WebSocket from 'ws';
 
 const LIMIT = 5;
 const PAGE = 1;
+let wss: WebSocket.Server;
 
 class TiresService extends BaseService {
 
@@ -18,6 +19,7 @@ class TiresService extends BaseService {
     static async create(tires: ITires, userId?: number): Promise<{ data: ITires }> {
 
         const { code, brand, model, price, status } = tires;
+
 
         const query = `INSERT INTO tires (code, brand, model, price, status, user_id) VALUES (?, ?, ?, ?, ?, ?)`;
 
@@ -180,7 +182,88 @@ class TiresService extends BaseService {
         }
     }
 
+    static async formatPrice(price: string) {
+        // Remove tudo que não for número, ponto ou vírgula
+        let cleanPrice = price.replace(/[^\d,]/g, '');
 
+        // Remove os pontos separadores de milhar (mantendo o último separador decimal)
+        cleanPrice = cleanPrice.replace(/\./g, '');
+
+        // Substitui a vírgula decimal por ponto
+        cleanPrice = cleanPrice.replace(',', '.');
+
+        return parseFloat(cleanPrice);
+    }
+
+
+
+    static async checkTireWear(wss: WebSocket.Server) {
+        const query = `
+            SELECT 
+                vt.*, 
+                v.license_plate, 
+                v.mileage AS current_mileage,
+                u.email,
+                t.code
+            FROM 
+                vehicle_tires vt
+            JOIN 
+                vehicles v ON vt.vehicle_id = v.id
+            JOIN 
+                users u ON v.user_id = u.id
+            JOIN 
+                tires t ON vt.tire_id = t.id
+            LEFT JOIN 
+                (SELECT vehicle_id, MAX(mileage_at_maintenance) AS max_mileage 
+                FROM maintenance 
+                GROUP BY vehicle_id) m 
+            ON vt.vehicle_id = m.vehicle_id
+            WHERE 
+                vt.to_replace = 0 
+                AND v.mileage >= vt.mileage_at_installation + vt.predicted_replacement_mileage;
+        `;
+
+        try {
+            console.error('Iniciando verificação de pneus...');
+            const [rows] = await db.promise().query<TireCheckResult[]>(query);
+
+            if (Array.isArray(rows) && rows.length > 0) {
+                console.error(`🔴 ${rows.length} pneus precisam de troca.`);
+                rows.forEach(async (tire) => {
+                    wss.clients.forEach((client) => {
+                        if (client.readyState === WebSocket.OPEN) {
+                            client.send(JSON.stringify({
+                                type: 'tire_replacement',
+                                message: `Pneu do veículo ${tire.license_plate} precisa ser trocado!`,
+                                data: tire
+                            }));
+                        }
+                    });
+                    if (!tire.email || !tire.license_plate) {
+                        console.error('Dados incompletos para o pneu:', tire);
+                        return;
+                    }
+                    console.log(`🔴 O pneu ${tire.code} do veículo ${tire.license_plate} precisa ser trocado!`);
+                    try {
+
+                        // Enviar notificação ao usuário responsável
+                        await NotificationService.sendEmail({
+                            to: tire.email,
+                            subject: 'Troca de Pneus Necessária',
+                            message: `O pneu ${tire.code} do veículo ${tire.license_plate} atingiu a quilometragem de substituição. Agende a troca o quanto antes.`,
+                        });
+                        console.log(`✅ Notificação enviada para ${tire.email}`);
+                    } catch (error) {
+                        console.error(`❌ Erro ao enviar notificação para ${tire.email}:`, error);
+                    }
+                });
+            } else {
+                console.log('✅ Nenhum pneu precisa de troca agora.');
+            }
+        } catch (error) {
+            console.error('Erro ao verificar pneus:', error);
+        }
+    }
 
 }
 
