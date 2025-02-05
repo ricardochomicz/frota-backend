@@ -5,6 +5,7 @@ export const tiresSchema = z.object({
     code: z.string().min(1, { message: "O código do pneu é obrigatório" }),
     model: z.string().min(1, { message: "O modelo do pneu é obrigatório" }),
     brand: z.string().min(1, { message: "A marca do pneu é obrigatória" }),
+    status: z.string().min(1, { message: "O status do pneu é obrigatório" }),
     price: z
         .string({ message: "O preço do pneu é obrigatório" })
     //.positive({ message: "O preço deve ser maior que zero" })

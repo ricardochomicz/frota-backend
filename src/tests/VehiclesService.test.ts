@@ -19,7 +19,7 @@ describe('VehicleService', () => {
 
             (db.promise().query as jest.Mock).mockResolvedValueOnce([result]);
 
-            const response = await VehicleService.create(vehicle);
+            const response = await VehicleService.create(vehicle, 1);
             expect(response).toEqual({ id: result.insertId });
             expect(db.promise().query).toHaveBeenCalledWith(
                 `INSERT INTO vehicles (brand, model, year, license_plate, mileage, fuel_type, user_id) VALUES (?, ?, ?, ?, ?, ?, ?)`,
@@ -29,14 +29,36 @@ describe('VehicleService', () => {
     });
 
     describe('getByLicensePlate', () => {
-        it('deve retornar um veiculo pela placa', async () => {
-            const vehicle: IVehicle = { id: 1, brand: 'BrandX', model: 'ModelY', year: 2020, license_plate: 'ABC-1234', mileage: 10000, fuel_type: 'gasoline' };
+        it('deve retornar o veículo se a placa estiver correta', async () => {
+            const licensePlate = 'ABC-1234';
+            const mockVehicle: IVehicle = { id: 1, license_plate: 'ABC-1234', brand: 'Toyota', model: 'Corolla', mileage: 1000, fuel_type: 'gasoline', year: 2020, user_id: 1 };
 
-            (db.promise().query as jest.Mock).mockResolvedValueOnce([vehicle]);
+            // Mock da query para retornar o veículo
+            (db.promise().query as jest.Mock).mockResolvedValueOnce([[mockVehicle]]);
 
-            const response = await VehicleService.getByLicensePlate('ABC-1234');
-            expect(response).toEqual(vehicle);
-            expect(db.promise().query).toHaveBeenCalledWith(`SELECT * FROM vehicles WHERE license_plate LIKE ?`, [`%ABC-1234%`]);
+            const result = await VehicleService.getByLicensePlate(licensePlate);
+
+            expect(result).toEqual(mockVehicle);
+        });
+
+        it('deve retornar null se o veículo não for encontrado', async () => {
+            const licensePlate = 'XYZ-5678';
+
+            // Mock da query para retornar um array vazio
+            (db.promise().query as jest.Mock).mockResolvedValueOnce([[]]);
+
+            const result = await VehicleService.getByLicensePlate(licensePlate);
+
+            expect(result).toBeNull();
+        });
+
+        it('deve lançar um erro se ocorrer um erro no banco de dados', async () => {
+            const licensePlate = 'ABC-1234';
+
+            // Mock da query para lançar um erro
+            (db.promise().query as jest.Mock).mockRejectedValueOnce(new Error('DB error'));
+
+            await expect(VehicleService.getByLicensePlate(licensePlate)).rejects.toThrow('Erro ao buscar veículosS. Tente novamente mais tarde.');
         });
     });
 

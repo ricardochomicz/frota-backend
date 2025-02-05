@@ -16,13 +16,14 @@ class VehicleController {
 
             //Verifica se o veículo já existe
             const vehicleExists = await VehicleService.getByLicensePlate(vehicle.license_plate);
+            console.error(vehicle.license_plate);
             if (vehicleExists) {
                 res.status(400).json({ error: 'Veículo com a placa informada já possui cadastrado' });
                 return;
             }
 
             // Criação do veículo no banco de dados
-            const result = await VehicleService.create(vehicle);
+            const result = await VehicleService.create(vehicle, req.user.userId);
             res.status(201).json({ message: 'Veículo criado com sucesso', data: result });
 
         } catch (err: any) {

@@ -1,12 +1,13 @@
 import { Request, Response } from 'express';
 import UserService from '../services/UserService';
 import { UserAuthService } from '../services/UserAuthService';
+import bcrypt from 'bcryptjs';
 
 
 
 class UserController {
     static async create(req: Request, res: Response): Promise<void> {
-        const { name, email, password_hash, role } = req.body;
+        const { name, email, password_hash, role, manager_id } = req.body;
 
         // Verifica se o usuário já existe
         const existingUser = await UserService.findByEmail(email);
@@ -16,16 +17,28 @@ class UserController {
         }
 
         try {
-            await UserService.create({ name, email, password_hash, role });
+            await UserService.create({ name, email, password_hash, role, manager_id });
             res.status(201).json({ message: 'Usuário criado com sucesso' });
         } catch (err: any) {
             res.status(500).json({ error: 'Erro ao criar usuário', details: err.message });
         }
     }
     static async getAll(req: Request, res: Response): Promise<void> {
+        const page = Math.max(1, Number(req.query.page) || 1);
+        const limit = Math.max(1, Number(req.query.limit) || 10);
+        const filters = {
+            name: req.query.name as string || undefined,
+            role: req.query.role as string || undefined,
+        };
         try {
-            const users = await UserService.getAll();    // Busca todos os usuários no banco de dados
-            res.status(200).json({ data: users });
+            const { users, total } = await UserService.getAll(page, limit, filters, req.user.userId);
+            res.status(200).json({
+                data: users,
+                total,
+                page,
+                limit,
+                totalPages: Math.ceil(total / limit)
+            });
         } catch (err: any) {
             res.status(500).json({ error: 'Erro ao buscar usuários', details: err.message });
         }
@@ -49,7 +62,14 @@ class UserController {
         const { id } = req.params;
         const { name, email, role } = req.body;
         try {
-            await UserService.update(Number(id), { name, email, role });
+            // Busca o usuário atual no banco de dados
+            const existingUser = await UserService.get(Number(id));
+            if (!existingUser) {
+                res.status(404).json({ error: 'Usuário não encontrado' });
+                return;
+            }
+
+            await UserService.update(Number(id), { name, email, role }, req.user.userId);
             res.status(200).json({ message: 'Usuário atualizado com sucesso' });
         } catch (err: any) {
             res.status(500).json({ error: 'Erro ao atualizar usuário', details: err.message });

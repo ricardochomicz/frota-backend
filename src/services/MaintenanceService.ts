@@ -2,16 +2,17 @@ import IMaintenance from "../models/Maintenance";
 import db from "../config/db";
 import moment from "moment";
 import BaseService from "./BaseService";
+import { IUser } from "../models/User";
 const PAGE = 1;
 const LIMIT = 10;
 class MaintenanceService extends BaseService {
 
-    static async create(maintenance: IMaintenance) {
+    static async create(maintenance: IMaintenance, userId?: number) {
         try {
             const date_format = moment().format('YYYY-MM-DD');
-            const { vehicle_id, type, description, mileage_at_maintenance, user_id } = maintenance;
+            const { vehicle_id, type, description, mileage_at_maintenance } = maintenance;
             const query = `INSERT INTO maintenance (vehicle_id, type, description, mileage_at_maintenance, date, user_id) VALUES (?, ?, ?, ?, ?, ?)`;
-            const [result]: any = await db.promise().query(query, [vehicle_id, type, description, mileage_at_maintenance, date_format, user_id]);
+            const [result]: any = await db.promise().query(query, [vehicle_id, type, description, mileage_at_maintenance, date_format, userId]);
             return { id: result.insertId }
         } catch (error) {
             throw new Error('Erro na requisição. Tente novamente mais tarde.');

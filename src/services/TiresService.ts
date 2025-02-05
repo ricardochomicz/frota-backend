@@ -3,6 +3,7 @@ import ITires from "../models/Tires";
 import { getAuthenticatedUser } from '../auth/generateAndVerifyToken';
 import { Request } from 'express';
 import BaseService from './BaseService';
+import { IUser } from '../models/User';
 
 const LIMIT = 5;
 const PAGE = 1;
@@ -14,14 +15,14 @@ class TiresService extends BaseService {
  * @param vehicle Dados do pneu
  * @returns Retorna o ID do pneu inserido
  */
-    static async create(tires: ITires): Promise<{ data: ITires }> {
+    static async create(tires: ITires, userId?: number): Promise<{ data: ITires }> {
 
-        const { code, brand, model, price, user_id, status } = tires;
+        const { code, brand, model, price, status } = tires;
 
-        const query = `INSERT INTO tires (code, brand, model, price, user_id, status) VALUES (?, ?, ?, ?, ?, ?)`;
+        const query = `INSERT INTO tires (code, brand, model, price, status, user_id) VALUES (?, ?, ?, ?, ?, ?)`;
 
         try {
-            const [result]: any = await db.promise().query(query, [code, brand, model, price, user_id, status]);
+            const [result]: any = await db.promise().query(query, [code, brand, model, price, status, userId]);
             return result;
         } catch (error) {
             throw new Error('Erro ao criar pneus. Tente novamente mais tarde.');
@@ -60,7 +61,11 @@ class TiresService extends BaseService {
             queryParams.push(`%${filters.status}%`);
         }
 
-        this.getUserAccessScope(userId);
+        const { query: userScopeQuery, countQuery: userScopeCountQuery, queryParams: userScopeParams } = await this.getUserAccessScope(userId);
+
+        query += userScopeQuery;
+        countQuery += userScopeCountQuery;
+        queryParams = [...queryParams, ...userScopeParams];
 
         query += ` LIMIT ? OFFSET ?`;
         queryParams.push(limit, offset);

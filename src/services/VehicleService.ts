@@ -1,5 +1,6 @@
 
 import db from '../config/db';
+import { IUser } from '../models/User';
 import IVehicle from "../models/Vehicle";
 import BaseService from './BaseService';
 
@@ -12,14 +13,14 @@ class VehicleService extends BaseService {
      * @param vehicle Dados do veículo
      * @returns Retorna o ID do veículo inserido
      */
-    static async create(vehicle: IVehicle): Promise<{ id: number }> {
+    static async create(vehicle: IVehicle, userId?: number): Promise<{ id: number }> {
 
-        const { brand, model, year, license_plate, mileage, fuel_type, user_id } = vehicle;
+        const { brand, model, year, license_plate, mileage, fuel_type } = vehicle;
 
         const query = `INSERT INTO vehicles (brand, model, year, license_plate, mileage, fuel_type, user_id) VALUES (?, ?, ?, ?, ?, ?, ?)`;
 
         try {
-            const [result]: any = await db.promise().query(query, [brand, model, year, license_plate, mileage, fuel_type, user_id]);
+            const [result]: any = await db.promise().query(query, [brand, model, year, license_plate, mileage, fuel_type, userId]);
             return { id: result.insertId };
         } catch (error) {
             throw new Error('Erro ao criar veículo. Tente novamente mais tarde.');
@@ -32,11 +33,11 @@ class VehicleService extends BaseService {
      * @returns 
      */
     static async getByLicensePlate(licensePlate: string): Promise<IVehicle | null> {
-        const query = `SELECT * FROM vehicles WHERE license_plate LIKE ?`;
+        const query = `SELECT * FROM vehicles WHERE license_plate = ?`;
 
         try {
-            const [rows]: any = await db.promise().query(query, [`%${licensePlate}%`]);
-            return rows;
+            const [rows]: any = await db.promise().query(query, [`${licensePlate}`]);
+            return rows[0] || null;
         } catch (error) {
             throw new Error('Erro ao buscar veículosS. Tente novamente mais tarde.');
         }
@@ -69,7 +70,11 @@ class VehicleService extends BaseService {
             queryParams.push(`%${filters.model}%`);
         }
 
-        this.getUserAccessScope(userId);
+        const { query: userScopeQuery, countQuery: userScopeCountQuery, queryParams: userScopeParams } = await this.getUserAccessScope(userId);
+
+        query += userScopeQuery;
+        countQuery += userScopeCountQuery;
+        queryParams = [...queryParams, ...userScopeParams];
 
         query += ` LIMIT ? OFFSET ?`;
         queryParams.push(limit, offset);

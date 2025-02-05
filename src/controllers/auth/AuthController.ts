@@ -44,6 +44,9 @@ class AuthController {
 
             // Busca o usuário no banco de dados
             const user = await UserService.findByEmail(email);
+            if (!password_hash) {
+                res.status(400).json({ error: 'Senha é obrigatória' });
+            }
             if (!user || !(await bcrypt.compare(password_hash, user.password_hash))) {
                 res.status(401).json({ error: 'Credenciais inválidas' });
                 return;

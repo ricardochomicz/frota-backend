@@ -2,28 +2,34 @@
 import db from '../config/db';
 import bcrypt from 'bcryptjs';
 import { IUser, IUserUpdate } from '../models/User';
+import BaseService from './BaseService';
 
-class UserService {
+const LIMIT = 5;
+const PAGE = 1;
+
+class UserService extends BaseService {
     static async create(user: IUser): Promise<void> {
-        const { name, email, password_hash, role } = user;
+        const { name, email, password_hash, role, manager_id } = user;
 
+        console.error('[ERRO] Falha ao cadastrar usuário:', email);
+        const [existingUser]: any = await db.promise().query(
+            'SELECT * FROM users WHERE email = ?', [email]
+        );
+
+        if (existingUser.length > 0) {
+            throw new Error('[ERRO API] Email já está em uso');
+        }
         try {
-            const [existingUser]: any = await db.promise().query(
-                'SELECT * FROM users WHERE email = ?', [email]
-            );
-
-            if (existingUser.length > 0) {
-                throw new Error('Email já está em uso');
-            }
 
             const hash = await bcrypt.hash(password_hash, 10);
 
-            await db.promise().query(
-                'INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)',
-                [name, email, hash, role]
-            );
+            const query = 'INSERT INTO users (name, email, password_hash, role, manager_id) VALUES (?, ?, ?, ?, ?)';
+
+            const [result]: any = await db.promise().query(query, [name, email, hash, role, manager_id]);
+            return result;
         } catch (err) {
-            throw err;
+            console.error('[ERRO] Falha ao cadastrar usuário:', err);
+            throw new Error('[ERRO API] Erro ao cadastrar usuário.');
         }
     }
 
@@ -38,42 +44,79 @@ class UserService {
             }
             return result[0];
         } catch (err) {
-            throw err;
+            console.error('[ERRO] Falha ao buscar usuário:', err);
+            throw new Error('[ERRO API] Erro ao buscar usuário.');
         }
     }
 
-    static async getAll(): Promise<IUser[]> {
+    static async getAll(page = PAGE, limit = LIMIT, filters: { name?: string; role?: string; } = {}, userId?: any): Promise<{ users: IUser[], total: number }> {
+        const offset = (Math.max(1, Number(page)) - 1) * Math.max(1, Number(limit));
+
+        let query = `SELECT id, name, email, role, manager_id, created_at, updated_at FROM users WHERE 1=1`;
+        let countQuery = `SELECT COUNT(*) AS total FROM users WHERE 1=1`;
+        let queryParams: any[] = [];
+
+        if (filters.name) {
+            query += ` AND name LIKE ?`;
+            countQuery += ` AND name LIKE ?`;
+            queryParams.push(`%${filters.name}%`);
+        }
+        if (filters.role) {
+            query += ` AND role LIKE ?`;
+            countQuery += ` AND role LIKE ?`;
+            queryParams.push(`%${filters.role}%`);
+        }
+
+        const { query: userScopeQuery, countQuery: userScopeCountQuery, queryParams: userScopeParams } = await this.getUserAccessScope(userId);
+
+        query += userScopeQuery;
+        countQuery += userScopeCountQuery;
+        queryParams = [...queryParams, ...userScopeParams];
+
+        query += ` LIMIT ? OFFSET ?`;
+        queryParams.push(limit, offset);
+
         try {
-            const [rows]: any = await db.promise().query('SELECT id, name, email, role, created_at, updated_at FROM users');
-            return rows;
+            const [[{ total }]]: any = await db.promise().query(countQuery, queryParams.slice(0, -2));
+            const [rows]: any = await db.promise().query(query, queryParams);
+            return { users: rows, total };
+
         } catch (error) {
-            console.error('[ERRO] Falha ao buscar usuários:', error);
-            throw new Error('Erro ao buscar usuários.');
+            console.error('[ERRO API] Falha ao buscar usuários:', error);
+            throw new Error('[ERRO API] Erro ao buscar usuários.');
         }
     }
 
     static async get(id: number): Promise<IUser | null> {
         try {
-            const [rows]: any = await db.promise().query('SELECT id, name, email, role, created_at, updated_at FROM users WHERE id = ?', [id]);
+            const [rows]: any = await db.promise().query('SELECT id, name, email, role, manager_id, created_at, updated_at FROM users WHERE id = ?', [id]);
             return rows[0] || null;
         } catch (error) {
-            throw new Error('Erro ao buscar usuário.');
+            throw new Error('[ERRO API] Erro ao buscar usuário.');
         }
     }
 
-    static async update(id: number, user: IUserUpdate): Promise<void> {
+
+    static async update(id: number, user: IUserUpdate, authenticatedUser: IUser): Promise<void> {
+
+        const { name, email, role } = user;
+
+        const query = `UPDATE users SET name = ?, email = ?, role = ? WHERE id = ?`;
         try {
-            await db.promise().query('UPDATE users SET name = ?, email = ?, role = ? WHERE id = ?', [user.name, user.email, user.role, id]);
+
+            await db.promise().query(query, [name, email, role, id]);
         } catch (error) {
-            throw new Error('Erro ao atualizar usuário.');
+            console.error('[ERRO] Falha ao atualizar usuário:', error);
+            throw new Error('[ERRO API] Erro ao atualizar usuário.');
         }
     }
+
 
     static async delete(id: number): Promise<void> {
         try {
             await db.promise().query('DELETE FROM users WHERE id = ?', [id]);
         } catch (error) {
-            throw new Error('Erro ao deletar usuário.');
+            throw new Error('[ERRO API] Erro ao deletar usuário.');
         }
     }
 
@@ -83,7 +126,7 @@ class UserService {
             const [rows]: any = await db.promise().query('SELECT id, name, email, role, created_at, updated_at FROM users WHERE id = ?', [id]);
             return rows[0] || null;
         } catch (error) {
-            throw new Error('Erro ao buscar usuário.');
+            throw new Error('[ERRO API] Erro ao buscar usuário.');
         }
     }
 }

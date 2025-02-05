@@ -1,5 +1,6 @@
 import db from '../config/db';
 import ITires from "../models/Tires";
+import { IUser } from '../models/User';
 import BaseService from '../services/BaseService';
 import TiresService from '../services/TiresService';
 
@@ -16,17 +17,17 @@ describe('TiresService', () => {
     describe('create', () => {
         it('deveria criar um novo pneu e retornar o resultado', async () => {
 
-            const tires: ITires = { code: '1234', brand: 'BrandX', model: 'ModelY', price: '100.00', user_id: 1, status: 'available' };
+            const tires: ITires = { code: '1234', brand: 'BrandX', model: 'ModelY', price: '100.00', status: 'available', user_id: 1 };
 
             const result = { insertId: 1 };
 
             (db.promise().query as jest.Mock).mockResolvedValueOnce([result]);
 
-            const response = await TiresService.create(tires);
+            const response = await TiresService.create(tires, 1);
             expect(response).toEqual(result);
             expect(db.promise().query).toHaveBeenCalledWith(
-                `INSERT INTO tires (code, brand, model, price, user_id, status) VALUES (?, ?, ?, ?, ?, ?)`,
-                [tires.code, tires.brand, tires.model, tires.price, tires.user_id, tires.status]
+                `INSERT INTO tires (code, brand, model, price, status, user_id) VALUES (?, ?, ?, ?, ?, ?)`,
+                [tires.code, tires.brand, tires.model, tires.price, tires.status, tires.user_id]
             );
         });
 

@@ -7,6 +7,7 @@ import maintenanceRoutes from './routes/MaintenanceRoutes';
 import costAnalysisRoutes from './routes/CostAnalysisRoutes';
 import userRoutes from './routes/UserRoutes';
 import AuthController from './controllers/auth/AuthController';
+import bodyParser from 'body-parser';
 
 const app = express();
 
@@ -21,6 +22,8 @@ app.use(cors());
 const PORT = process.env.PORT || 5000;
 
 app.use(express.json());
+
+app.use(bodyParser.json());
 
 app.get('/', (req, res) => {
     res.send('API de Gerenciamento de Frota');

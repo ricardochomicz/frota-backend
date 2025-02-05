@@ -13,7 +13,7 @@ class MaintenanceController {
             }
 
             const maintenance = maintenanceSchema.parse(req.body);
-            const result = await MaintenanceService.create(maintenance);
+            const result = await MaintenanceService.create(maintenance, req.user.userId);
 
             const maintenanceDetails = await MaintenanceService.getMaintenanceWithVehicle(result.id);
             res.status(201).json({ message: 'Manutenção cadastrada com sucesso', data: maintenanceDetails });

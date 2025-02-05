@@ -26,7 +26,7 @@ describe("MaintenanceService", () => {
 
             (db.promise().query as jest.Mock).mockResolvedValueOnce(mockInsertResult);
 
-            const result = await MaintenanceService.create(mockMaintenance);
+            const result = await MaintenanceService.create(mockMaintenance, 1);
 
             expect(result).toEqual({ id: 10 });
             expect(db.promise().query).toHaveBeenCalledWith(

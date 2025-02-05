@@ -24,13 +24,13 @@ router.get('/users', authMiddleware, UserController.getAll);
  * @route GET /users/:id
  * @description Retorna um usuário específico
  */
-router.get('/users/:id', authMiddleware, UserController.get);
+router.get('/user/:id', authMiddleware, UserController.get);
 
 /**
  * @route PUT /users/:id
  * @description Atualiza um usuário específico
  */
-router.put('/users/:id', authMiddleware, validate(userSchema), UserController.update);
+router.put('/user/:id/edit', authMiddleware, validate(userSchema), UserController.update);
 
 
 router.get('/me', authMiddleware, UserController.getAuthenticatedUser);
