@@ -119,6 +119,17 @@ class VehicleController {
         }
     }
 
+    static async updateMileage(req: Request, res: Response): Promise<void> {
+        console.error("[CONTROLLER]", req.body);
+        try {
+            const { id, mileage } = req.body;  // Dados atualizados do veículo
+            await VehicleService.updateMileage(Number(id), mileage);  // Atualiza o veículo no banco de dados
+            res.status(200).json({ message: 'KM atualizado com sucesso' });
+        } catch (err: any) {
+            res.status(500).json({ error: 'Erro interno', details: err.message });
+        }
+    }
+
     /**
      * 
      * @param req ID do veículo a ser excluído

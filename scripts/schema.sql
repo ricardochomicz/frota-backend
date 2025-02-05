@@ -31,7 +31,8 @@ CREATE TABLE IF NOT EXISTS vehicle_tires (
   id INT AUTO_INCREMENT PRIMARY KEY,
   vehicle_id INT NOT NULL,               
   tire_id INT NOT NULL,      
-  user_id INT NOT NULL,            
+  user_id INT NOT NULL,        
+  maintenance_id INT NULL,    
   installation_date DATE NOT NULL,       
   mileage_at_installation INT NOT NULL,  
   predicted_replacement_mileage INT NOT NULL, 
@@ -42,6 +43,7 @@ CREATE TABLE IF NOT EXISTS vehicle_tires (
   FOREIGN KEY (vehicle_id) REFERENCES vehicles(id) ON DELETE CASCADE,
   FOREIGN KEY (tire_id) REFERENCES tires(id) ON DELETE CASCADE
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+  FOREIGN key (maintenance_id) REFERENCES maintenance(id) ON DELETE CASCADE
 );
 
 -- Tabela de manutenção

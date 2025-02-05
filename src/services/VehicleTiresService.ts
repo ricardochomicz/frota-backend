@@ -1,12 +1,11 @@
 import db from "../config/db";
 import IVehicleTires from "../models/VehicleTires";
-import moment from "moment";
-import { tiresSchema } from "../schemas/TiresSchema";
+
 
 class VehicleTiresService {
 
     static async create(vehicleTiresArray: IVehicleTires[]): Promise<IVehicleTires[]> {
-        const query = `INSERT INTO vehicle_tires (vehicle_id, tire_id, installation_date, mileage_at_installation, predicted_replacement_mileage, user_id) VALUES ?`;
+        const query = `INSERT INTO vehicle_tires (vehicle_id, tire_id, installation_date, mileage_at_installation, predicted_replacement_mileage, user_id, maintenance_id) VALUES ?`;
 
         // Mapeia os valores para inserção
         const values = vehicleTiresArray.map(tire => [
@@ -15,7 +14,8 @@ class VehicleTiresService {
             tire.installation_date,
             tire.mileage_at_installation,
             tire.predicted_replacement_mileage,
-            tire.user_id
+            tire.user_id,
+            tire.maintenance_id
         ]);
 
         try {
@@ -32,6 +32,7 @@ class VehicleTiresService {
                 id: result.insertId + i // Garante que cada objeto tem um ID único
             }));
         } catch (error) {
+            console.error("[ERROR API] Erro ao inserir os pneus:", error);
             throw new Error('Erro ao inserir os pneus. Tente novamente mais tarde.');
         }
     }
@@ -42,16 +43,46 @@ class VehicleTiresService {
      * @returns 
      */
     static async getTiresByVehicleId(vehicle_id: number): Promise<IVehicleTires | null> {
-        const query = "SELECT vt.*, t.code, t.brand, t.model FROM vehicle_tires vt INNER JOIN tires t ON vt.tire_id = t.id WHERE vt.vehicle_id = ?";
-
+        const query = `
+        SELECT 
+            vt.*, 
+            t.code, 
+            t.brand, 
+            t.model, 
+            v.mileage 
+        FROM vehicle_tires vt 
+        INNER JOIN tires t ON vt.tire_id = t.id 
+        INNER JOIN vehicles v ON vt.vehicle_id = v.id 
+        WHERE vt.vehicle_id = ? 
+        AND vt.to_replace = 0
+    `;
 
         try {
             const [rows]: any = await db.promise().query(query, [vehicle_id]);
             return rows;
         } catch (error) {
+            console.error("[ERROR API] Erro ao buscar pneu:", error);
             throw new Error('Erro ao buscar pneu. Tente novamente mais tarde.');
         }
     }
+
+    static async getVehicleTiresForMaintenance(vehicle_id: number, maintenance_id: number): Promise<IVehicleTires | null> {
+        const query = `
+            SELECT vt.*, t.code, t.brand, t.model
+            FROM vehicle_tires vt
+            INNER JOIN tires t ON vt.tire_id = t.id
+            WHERE vt.vehicle_id = ? AND vt.maintenance_id = ? AND vt.to_replace = 0
+        `;
+
+        try {
+            const [rows]: any = await db.promise().query(query, [vehicle_id, maintenance_id]);
+            return rows;
+        } catch (error) {
+            console.error("[ERROR API] Erro ao buscar pneu:", error);
+            throw new Error('Erro ao buscar pneu. Tente novamente mais tarde.');
+        }
+    }
+
 
     /**
      * Verifica se o pneu está cadastrado no veículo atual ou em outro veículo.
@@ -61,18 +92,39 @@ class VehicleTiresService {
      */
     static async isTireAssignedToAnotherVehicle(tire_id: number, vehicle_id: number): Promise<boolean> {
         const query = `
-        SELECT COUNT(*) as total
-        FROM vehicle_tires
-        WHERE tire_id = ?
-        AND (vehicle_id = ? OR vehicle_id != ?)
-    `;
+            SELECT COUNT(*) as total
+            FROM vehicle_tires vt
+            INNER JOIN tires t ON vt.tire_id = t.id
+            WHERE vt.tire_id = ? 
+            AND (vt.vehicle_id != ? AND t.status != 'available')
+        `;
+
         try {
-            const [rows]: any = await db.promise().query(query, [tire_id, vehicle_id, vehicle_id]);
-            return rows[0].total > 0; // Retorna true se o pneu já estiver cadastrado em outro veículo
+            const [rows]: any = await db.promise().query(query, [tire_id, vehicle_id]);
+            return rows[0].total > 0; // Retorna true se o pneu já estiver em uso ou baixado
         } catch (error: any) {
+            console.error("[ERROR API] Pneu em uso por outro veículo ou pneu já foi baixado:", error);
             throw new Error("Erro ao verificar pneu. Tente novamente mais tarde.");
         }
     }
+
+
+    static async removeTireToReplace(id: number, data: IVehicleTires): Promise<void> {
+        const { tire_id, mileage_to_replace } = data;
+        const query = `UPDATE vehicle_tires SET to_replace = 1, mileage_to_replace = ? WHERE id = ?`;
+
+        const updateTiresQuery = `UPDATE tires SET status = 'available' WHERE id = ?`;
+
+        try {
+            await db.promise().query(query, [mileage_to_replace, id]);
+
+            await db.promise().query(updateTiresQuery, [tire_id]);
+        } catch (error) {
+            console.error("[ERROR API] Erro ao atualizar pneu:", error);
+            throw new Error('Erro ao atualizar pneu. Tente novamente mais tarde.');
+        }
+    }
+
 
     /**
      * Remove um pneu da tabela vehicle_tires pelo tire_id.
@@ -110,6 +162,7 @@ class VehicleTiresService {
             const query = "UPDATE tires SET status = ? WHERE id = ?";
             await db.promise().query(query, [status, tire_id]);
         } catch (error) {
+            console.error("[ERROR API] Erro ao atualizar o status do pneu:", error);
             throw new Error('Erro ao atualizar o status do pneu. Tente novamente mais tarde.');
         }
     }

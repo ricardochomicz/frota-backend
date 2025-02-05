@@ -42,6 +42,9 @@ router.get('/to-select', authMiddleware, VehicleController.getAllVehiclesToSelec
 router.put('/vehicles/:id/edit', authMiddleware, validate(vehicleSchema), VehicleController.update);
 
 
+router.put('/vehicles/mileage', authMiddleware, VehicleController.updateMileage);
+
+
 /**
  * @route DELETE /vehicles/:id
  * @description Deleta um veículo pelo ID

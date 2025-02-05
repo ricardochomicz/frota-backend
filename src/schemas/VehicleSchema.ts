@@ -12,3 +12,5 @@ export const vehicleSchema = z.object({
 export const vehicleLicensePlateSchema = z.object({
     license_plate: z.string().regex(/^[A-Z]{3}-\d{4}$/, { message: "Placa inválida (Formato: AAA-1234)" }),
 });
+
+

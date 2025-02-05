@@ -85,7 +85,7 @@ class TiresController {
             }
             res.status(200).json({ data: tire }); // Retorne aqui para evitar múltiplas respostas
         } catch (err: any) {
-            res.status(500).json({ error: `Pneu informado já está em uso em outro veículo` }); // Retorne aqui para evitar múltiplas respostas
+            res.status(500).json({ error: `Pneu informado já está em uso em outro veículo ou já foi baixado.` }); // Retorne aqui para evitar múltiplas respostas
         }
     }
 

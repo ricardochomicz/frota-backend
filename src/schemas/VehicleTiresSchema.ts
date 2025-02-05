@@ -20,5 +20,9 @@ export const vehicleTiresSchema = z.array(z.object({
     predicted_replacement_mileage: z.preprocess(
         (val) => Number(val),
         z.number().min(0, { message: "KM de substituição deve ser um número válido" })
+    ),
+    maintenance_id: z.preprocess(
+        (val) => Number(val),
+        z.number().min(1)
     )
 }));

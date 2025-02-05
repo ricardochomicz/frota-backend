@@ -133,6 +133,17 @@ class VehicleService extends BaseService {
         }
     }
 
+    static async updateMileage(id: number, mileage: number) {
+        const query = `UPDATE vehicles SET mileage = ? WHERE id = ?`;
+
+        try {
+            await db.promise().query(query, [mileage, id]);
+        } catch (error) {
+            console.error("[ERROR API] Erro ao atualizar kilometragem do veículo:", error);
+            throw new Error('Erro ao atualizar veículo. Tente novamente mais tarde.');
+        }
+    }
+
     static async destroy(id: number): Promise<void> {
         const query = `DELETE FROM vehicles WHERE id = ?`;
 

@@ -49,6 +49,34 @@ class VehicleTiresController {
         }
     }
 
+    static async getVehicleTiresForMaintenance(req: Request, res: Response): Promise<void> {
+        try {
+            const { vehicle_id, maintenance_id } = req.params;
+            const tires = await VehicleTiresService.getVehicleTiresForMaintenance(Number(vehicle_id), Number(maintenance_id));
+            res.status(200).json({ data: tires });
+        } catch (err: any) {
+            res.status(500).json({ error: 'Erro ao buscar pneus', details: err.message });
+        }
+    }
+
+    static async removeTireToReplace(req: Request, res: Response): Promise<void> {
+        try {
+            const { id } = req.params;
+            const data = req.body;
+            if (!id || isNaN(Number(id))) {
+                res.status(400).json({ error: 'ID do veículo inválido.' });
+            }
+
+            if (!data.tire_id || isNaN(Number(data.tire_id))) {
+                res.status(400).json({ error: 'ID do pneu inválido.' });
+            }
+            await VehicleTiresService.removeTireToReplace(Number(id), data);
+            res.status(200).json({ message: 'Pneu removido do veículo' });
+        } catch (err: any) {
+            res.status(500).json({ error: 'Erro ao remover pneu do veículo', details: err.message });
+        }
+    }
+
     static async dischargeTire(req: Request, res: Response): Promise<void> {
         try {
             const { tire_id } = req.params;
