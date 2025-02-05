@@ -33,7 +33,7 @@ class TiresService extends BaseService {
      * 
      * @returns Retorna uma lista com todos os pneus cadastrados
      */
-    static async getAll(page = PAGE, limit = LIMIT, filters: { code?: string; brand?: string; model?: string; status?: string } = {}, userId: any): Promise<{ tires: ITires[], total: number }> {
+    static async getAll(page = PAGE, limit = LIMIT, filters: { code?: string; brand?: string; model?: string; status?: string } = {}, userId?: any): Promise<{ tires: ITires[], total: number }> {
         const offset = (Math.max(1, Number(page)) - 1) * Math.max(1, Number(limit));
 
         let query = `SELECT * FROM tires WHERE 1=1`;
@@ -75,6 +75,7 @@ class TiresService extends BaseService {
             const [rows]: any = await db.promise().query(query, queryParams);
             return { tires: rows, total };
         } catch (error) {
+            console.error('Erro ao buscar pneus:', error);
             throw new Error('Erro ao buscar pneus. Tente novamente mais tarde.');
         }
     }
@@ -115,7 +116,7 @@ class TiresService extends BaseService {
             const [checkRows]: any = await db.promise().query(checkQuery, [code]);
 
             // Se o pneu estiver associado a algum veículo, não pode ser retornado
-            if (checkRows[0].count > 0) {
+            if (checkRows[0].count > 0 && !checkRows[0].to_replace) {
                 throw new Error('Pneu já está associado a um veículo.');
             }
 

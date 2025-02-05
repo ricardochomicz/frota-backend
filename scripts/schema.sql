@@ -35,6 +35,8 @@ CREATE TABLE IF NOT EXISTS vehicle_tires (
   installation_date DATE NOT NULL,       
   mileage_at_installation INT NOT NULL,  
   predicted_replacement_mileage INT NOT NULL, 
+  to_replace BOOLEAN NULL DEFAULT FALSE,
+  mileage_to_replace INT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (vehicle_id) REFERENCES vehicles(id) ON DELETE CASCADE,
@@ -85,6 +87,5 @@ CREATE TABLE IF NOT EXISTS cost_analysis (
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
-ALTER TABLE tires
-MODIFY COLUMN status ENUM('available', 'in use', 'lower') NULL;
+
 

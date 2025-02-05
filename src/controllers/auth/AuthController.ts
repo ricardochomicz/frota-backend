@@ -12,7 +12,6 @@ class AuthController {
         try {
             // Validação de dados
             const { name, email, password_hash, role } = registerSchema.parse(req.body);
-
             // Verifica se o usuário já existe
             const existingUser = await UserService.findByEmail(email);
             if (existingUser) {

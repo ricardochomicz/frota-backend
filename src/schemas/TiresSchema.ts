@@ -1,7 +1,6 @@
 import { z } from "zod";
 
 export const tiresSchema = z.object({
-    user_id: z.number().min(1, { message: "O usuário é obrigatório" }),
     code: z.string().min(1, { message: "O código do pneu é obrigatório" }),
     model: z.string().min(1, { message: "O modelo do pneu é obrigatório" }),
     brand: z.string().min(1, { message: "A marca do pneu é obrigatória" }),

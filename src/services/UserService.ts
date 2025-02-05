@@ -8,7 +8,7 @@ const LIMIT = 5;
 const PAGE = 1;
 
 class UserService extends BaseService {
-    static async create(user: IUser): Promise<void> {
+    static async create(user: IUser): Promise<any> {
         const { name, email, password_hash, role, manager_id } = user;
 
         console.error('[ERRO] Falha ao cadastrar usuário:', email);

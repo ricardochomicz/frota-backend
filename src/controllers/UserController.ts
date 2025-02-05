@@ -31,7 +31,7 @@ class UserController {
             role: req.query.role as string || undefined,
         };
         try {
-            const { users, total } = await UserService.getAll(page, limit, filters, req.user.userId);
+            const { users, total } = await UserService.getAll(page, limit, filters);
             res.status(200).json({
                 data: users,
                 total,

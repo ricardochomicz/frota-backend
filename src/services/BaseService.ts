@@ -6,25 +6,36 @@ class BaseService {
         let query = '';
         let countQuery = '';
         let queryParams: any[] = [];
+
         const [managerResults]: any = await db.promise().query(
             `SELECT id FROM users WHERE manager_id = ?`,
             [userId]
         );
 
         if (managerResults.length > 0) {
-            // Se o usuário logado é um manager, ele pode ver seus próprios registros e os dos subordinados
-            const subordinateIds = managerResults.map((user: any) => user.id); // IDs dos subordinados
-            query += ` AND (user_id = ? OR user_id IN (?))`; // Filtra registros do usuário ou dos subordinados
-            countQuery += ` AND (user_id = ? OR user_id IN (?))`;
-            queryParams.push(userId, subordinateIds);
+            const subordinateIds = managerResults.map((user: any) => user.id);
+            query += ` AND (id = ? OR id IN (?${', ?'.repeat(subordinateIds.length - 1)}))`; // Filtra registros do usuário ou dos subordinados
+            countQuery += ` AND (id = ? OR id IN (?${', ?'.repeat(subordinateIds.length - 1)}))`;
+            queryParams.push(userId, ...subordinateIds);
         } else {
-            // Se o usuário logado não é um manager, ele só pode ver seus próprios registros
-            query += ` AND user_id = ?`; // Filtra apenas os registros do usuário logado
-            countQuery += ` AND user_id = ?`;
-            queryParams.push(userId);
+            // Verificar se o usuário logado não é um manager (manager_id é null)
+            const [userResults]: any = await db.promise().query(
+                `SELECT manager_id FROM users WHERE id = ?`,
+                [userId]
+            );
+
+            if (userResults.length > 0 && userResults[0].manager_id === null) {
+                query += ` AND id = ?`; // Filtra apenas os registros do usuário logado
+                countQuery += ` AND id = ?`;
+                queryParams.push(userId);
+            }
         }
+
         return { query, countQuery, queryParams };
     }
+
+
+
 
     static async getFilters(filters: any, column: string): Promise<any> {
         let query = '';

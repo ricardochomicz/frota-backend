@@ -22,8 +22,6 @@ class TiresController {
                 return;
             }
 
-
-
             // Criação do pneu no banco de dados
             const result = await TiresService.create(tires, req.user.userId);
             res.status(201).json({ message: 'Pneu cadastrado com sucesso', data: result });
@@ -49,7 +47,7 @@ class TiresController {
 
 
         try {
-            const { tires, total } = await TiresService.getAll(page, limit, filters, req.user.userId);
+            const { tires, total } = await TiresService.getAll(page, limit, filters);
             res.status(200).json({
                 data: tires,
                 total,
