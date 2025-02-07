@@ -32,7 +32,8 @@ class MaintenanceService extends BaseService {
             u.id AS user_id, u.name AS user_name, u.email AS user_email
         FROM maintenance m
         JOIN vehicles v ON m.vehicle_id = v.id
-        JOIN users u ON m.user_id = u.id
+        LEFT JOIN users u ON u.id = m.user_id
+        JOIN vehicle_tires vt ON vt.maintenance_id = m.id
         WHERE 1=1
     `;
         let countQuery = `SELECT COUNT(*) AS total
@@ -67,7 +68,11 @@ class MaintenanceService extends BaseService {
             queryParams.push(filters.endDate);
         }
 
-        this.getUserAccessScope(userId);
+        const { query: userScopeQuery, countQuery: userScopeCountQuery, queryParams: userScopeParams } = await this.getUserAccessScope(userId);
+
+        query += userScopeQuery;
+        countQuery += userScopeCountQuery;
+        queryParams = [...queryParams, ...userScopeParams];
 
 
         query += ` LIMIT ? OFFSET ?`;

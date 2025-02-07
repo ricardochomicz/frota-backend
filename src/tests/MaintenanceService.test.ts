@@ -50,6 +50,11 @@ describe("MaintenanceService", () => {
         });
 
         it("deve retornar todas as manutenções sem filtros", async () => {
+            jest.spyOn(MaintenanceService, 'getUserAccessScope').mockResolvedValue({
+                query: '',
+                countQuery: '',
+                queryParams: []
+            });
             const mockMaintenances = [{
                 id: 1,
                 date: new Date(),
@@ -71,7 +76,7 @@ describe("MaintenanceService", () => {
 
             jest.spyOn(db, 'promise').mockReturnValue({
                 query: jest.fn()
-                    .mockResolvedValueOnce([[]])
+                    // .mockResolvedValueOnce([[]])
                     .mockResolvedValueOnce([mockTotal]) // Retorno da contagem total
                     .mockResolvedValueOnce([mockMaintenances]) // Retorno das manutenções
             } as any);
@@ -93,7 +98,7 @@ describe("MaintenanceService", () => {
                         brand: "Toyota",
                         year: 2020,
                     },
-                    user: {
+                    data_user: {
                         id: 1,
                         name: "Ricardo Chomicz",
                         email: "ricardo@email.com",
@@ -104,6 +109,12 @@ describe("MaintenanceService", () => {
         });
 
         it("deve aplicar filtros corretamente", async () => {
+            jest.spyOn(MaintenanceService, 'getUserAccessScope').mockResolvedValue({
+                query: ` AND user_id = ?`,
+                countQuery: ` AND user_id = ?`,
+                queryParams: [1],
+            });
+
             const mockMaintenances = [{
                 id: 1,
                 date: new Date(),
@@ -123,17 +134,11 @@ describe("MaintenanceService", () => {
             }];
             const mockTotal = [{ total: 1 }];
 
-            jest.spyOn(MaintenanceService, 'getUserAccessScope').mockResolvedValue({
-                query: ` AND user_id = ?`,
-                countQuery: ` AND user_id = ?`,
-                queryParams: [1],
-            });
-
             (db.promise().query as jest.Mock)
                 .mockResolvedValueOnce([mockTotal])
                 .mockResolvedValueOnce([mockMaintenances]);
 
-            const filters = { type: "Tire", license_plate: "ABC-1234" };
+            const filters = { type: "Oil Change", license_plate: "ABC-1234" };
             const result = await MaintenanceService.getAll(1, 10, filters, 1);
             expect(result).toEqual({
                 maintenances: [{
@@ -151,7 +156,7 @@ describe("MaintenanceService", () => {
                         brand: "Toyota",
                         year: 2020,
                     },
-                    user: {
+                    data_user: {
                         id: 1,
                         name: "Ricardo Chomicz",
                         email: "ricardo@email.com",

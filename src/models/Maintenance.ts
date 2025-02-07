@@ -8,6 +8,7 @@ interface IMaintenance {
     date?: Date;
     created_at?: Date;
     updated_at?: Date;
+    status?: string;
     vehicle?: {
         id?: number;
         model?: string;

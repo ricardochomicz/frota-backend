@@ -54,7 +54,6 @@ class VehicleTiresService {
         INNER JOIN tires t ON vt.tire_id = t.id 
         INNER JOIN vehicles v ON vt.vehicle_id = v.id 
         WHERE vt.vehicle_id = ? 
-        AND vt.to_replace = 0
     `;
 
         try {
@@ -71,7 +70,7 @@ class VehicleTiresService {
             SELECT vt.*, t.code, t.brand, t.model
             FROM vehicle_tires vt
             INNER JOIN tires t ON vt.tire_id = t.id
-            WHERE vt.vehicle_id = ? AND vt.maintenance_id = ? AND vt.to_replace = 0
+            WHERE vt.vehicle_id = ? AND vt.maintenance_id = ?
         `;
 
         try {
@@ -111,14 +110,15 @@ class VehicleTiresService {
 
     static async removeTireToReplace(id: number, data: IVehicleTires): Promise<void> {
         const { tire_id, mileage_to_replace } = data;
+        // marca o pneu para ser trocado
         const query = `UPDATE vehicle_tires SET to_replace = 1, mileage_to_replace = ? WHERE id = ?`;
 
-        const updateTiresQuery = `UPDATE tires SET status = 'available' WHERE id = ?`;
+        //Atualiza o status do pneu para disponivel
+        // const updateTiresQuery = `UPDATE tires SET status = 'available' WHERE id = ?`;
+        await this.updateStatusTires(tire_id, 'available');
 
         try {
             await db.promise().query(query, [mileage_to_replace, id]);
-
-            await db.promise().query(updateTiresQuery, [tire_id]);
         } catch (error) {
             console.error("[ERROR API] Erro ao atualizar pneu:", error);
             throw new Error('Erro ao atualizar pneu. Tente novamente mais tarde.');

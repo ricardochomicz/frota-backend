@@ -6,7 +6,8 @@ export const tiresSchema = z.object({
     brand: z.string().min(1, { message: "A marca do pneu é obrigatória" }),
     status: z.string().min(1, { message: "O status do pneu é obrigatório" }),
     price: z
-        .string({ message: "O preço do pneu é obrigatório" })
+        .string({ message: "O preço do pneu é obrigatório" }),
+    durability_km: z.number({ message: "A durabilidade do pneu é obrigatória" })
     //.positive({ message: "O preço deve ser maior que zero" })
     //.refine((value) => {
     // Verifica se o número tem até 10 dígitos no total e 2 casas decimais

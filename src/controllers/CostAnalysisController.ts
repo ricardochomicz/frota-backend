@@ -22,11 +22,22 @@ class CostAnalysisController {
     }
 
     static async getAll(req: Request, res: Response) {
+        const page = Math.max(1, Number(req.query.page) || 1);
+        const limit = Math.max(1, Number(req.query.limit) || 10);
+        const filters = {
+            replacement_reason: req.query.replacement_reason as string || undefined
+        };
         try {
-            const costAnalysis = await CostAnalysisService.getAll();    // Busca todas as análises de custo no banco de dados
-            res.status(200).json({ data: costAnalysis });
+            const { analysis, total } = await CostAnalysisService.getAll(page, limit, filters);
+            res.status(200).json({
+                data: analysis,
+                total,
+                page,
+                limit,
+                totalPages: Math.ceil(total / limit)
+            });
         } catch (err: any) {
-            res.status(500).json({ error: 'Erro ao buscar análises de custo', details: err.message });
+            res.status(500).json({ error: 'Erro ao buscar análises', details: err.message });
         }
     }
 

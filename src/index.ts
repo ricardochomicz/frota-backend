@@ -71,7 +71,7 @@ server.listen(PORT, () => {
 
 const wss = new WebSocket.Server({ server });
 
-app.get('/test-tires', async (req, res) => {
+app.get('/api/verify-tires', async (req, res) => {
     try {
         await TiresService.checkTireWear(wss);
         res.status(200).json({ message: 'Verificação de pneus concluída' });

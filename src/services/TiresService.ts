@@ -18,13 +18,12 @@ class TiresService extends BaseService {
  */
     static async create(tires: ITires, userId?: number): Promise<{ data: ITires }> {
 
-        const { code, brand, model, price, status } = tires;
+        const { code, brand, model, price, status, durability_km } = tires;
 
-
-        const query = `INSERT INTO tires (code, brand, model, price, status, user_id) VALUES (?, ?, ?, ?, ?, ?)`;
+        const query = `INSERT INTO tires (code, brand, model, price, status, durability_km, user_id) VALUES (?, ?, ?, ?, ?, ?, ?)`;
 
         try {
-            const [result]: any = await db.promise().query(query, [code, brand, model, price, status, userId]);
+            const [result]: any = await db.promise().query(query, [code, brand, model, price, status, durability_km, userId]);
             return result;
         } catch (error) {
             console.error("[ERROR API] Erro ao criar pneus:", error);
@@ -118,10 +117,9 @@ class TiresService extends BaseService {
         try {
             const [checkRows]: any = await db.promise().query(checkQuery, [code]);
 
-            console.error("[ERROR API] Pneu ja associado a um veiculo", checkRows[0]);
             // Se o pneu estiver associado a algum veículo, não pode ser retornado
             if (checkRows[0].count > 0 && checkRows[0].status === "in use") {
-                console.error("[ERROR API] Pneu ja associado a um veiculo");
+                console.error("[ERROR API]getTiresByCode Pneus ja associado a um veiculo");
                 throw new Error('Pneu já está associado a um veículo.');
             } else if (checkRows[0].status === 'lower') {
                 console.error("[ERROR API] Pneu ja baixado");
@@ -147,12 +145,12 @@ class TiresService extends BaseService {
      */
     static async update(id: number, data: ITires): Promise<void> {
 
-        const { code, brand, model, price, user_id } = data;
+        const { code, brand, model, price, status, durability_km } = data;
 
-        const query = `UPDATE tires SET code = ?, brand = ?, model = ?, price = ?, user_id = ? WHERE id = ?`;
+        const query = `UPDATE tires SET code = ?, brand = ?, model = ?, price = ?, status = ?, durability_km = ? WHERE id = ?`;
 
         try {
-            await db.promise().query(query, [code, brand, model, price, user_id, id]);
+            await db.promise().query(query, [code, brand, model, price, status, durability_km, id]);
         } catch (error) {
             console.error("[ERROR API] Erro ao atualizar pneu:", error);
             throw new Error('Erro ao atualizar pneu. Tente novamente mais tarde.');
@@ -181,21 +179,6 @@ class TiresService extends BaseService {
             throw new Error("Este pneu não pode ser excluído, pois está em uso por um veículo.");
         }
     }
-
-    static async formatPrice(price: string) {
-        // Remove tudo que não for número, ponto ou vírgula
-        let cleanPrice = price.replace(/[^\d,]/g, '');
-
-        // Remove os pontos separadores de milhar (mantendo o último separador decimal)
-        cleanPrice = cleanPrice.replace(/\./g, '');
-
-        // Substitui a vírgula decimal por ponto
-        cleanPrice = cleanPrice.replace(',', '.');
-
-        return parseFloat(cleanPrice);
-    }
-
-
 
     static async checkTireWear(wss: WebSocket.Server) {
         const query = `

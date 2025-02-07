@@ -5,7 +5,6 @@ import MaintenanceService from '../services/MaintenanceService';
 class MaintenanceController {
 
     static async create(req: Request, res: Response): Promise<void> {
-
         try {
             if (!req.user) {
                 res.status(401).json({ error: "Usuário não autenticado" });

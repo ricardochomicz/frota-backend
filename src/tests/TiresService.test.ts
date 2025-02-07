@@ -1,5 +1,5 @@
 import db from '../config/db';
-import ITires from "../models/Tires";
+import { ITires } from "../models/Tires";
 import { IUser } from '../models/User';
 import BaseService from '../services/BaseService';
 import TiresService from '../services/TiresService';
@@ -14,10 +14,11 @@ describe('TiresService', () => {
         jest.clearAllMocks();
     });
 
+
     describe('create', () => {
         it('deveria criar um novo pneu e retornar o resultado', async () => {
 
-            const tires: ITires = { code: '1234', brand: 'BrandX', model: 'ModelY', price: '100.00', status: 'available', user_id: 1 };
+            const tires: ITires = { code: '1234', brand: 'BrandX', model: 'ModelY', price: '100.00', status: 'available', durability_km: 1000, user_id: 1 };
 
             const result = { insertId: 1 };
 
@@ -26,14 +27,14 @@ describe('TiresService', () => {
             const response = await TiresService.create(tires, 1);
             expect(response).toEqual(result);
             expect(db.promise().query).toHaveBeenCalledWith(
-                `INSERT INTO tires (code, brand, model, price, status, user_id) VALUES (?, ?, ?, ?, ?, ?)`,
-                [tires.code, tires.brand, tires.model, tires.price, tires.status, tires.user_id]
+                `INSERT INTO tires (code, brand, model, price, status, durability_km, user_id) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+                [tires.code, tires.brand, tires.model, tires.price, tires.status, tires.durability_km, tires.user_id]
             );
         });
 
         it('deve gerar um erro se a consulta ao banco de dados falhar', async () => {
 
-            const tires: ITires = { code: '1234', brand: 'BrandX', model: 'ModelY', price: '100.00', user_id: 1, status: 'available' };
+            const tires: ITires = { code: '1234', brand: 'BrandX', model: 'ModelY', price: '100.00', user_id: 1, status: 'available', durability_km: 1000 };
 
 
             (db.promise().query as jest.Mock).mockRejectedValueOnce(new Error('Database error'));
@@ -43,13 +44,18 @@ describe('TiresService', () => {
     });
 
     describe("getAll", () => {
+
         it("deve retornar todos os pneus sem filtros", async () => {
-            const mockTires = [{ id: 1, code: "ABC-1234", brand: "Michelin", model: "X-ICE", price: "100.00", status: "available" }];
+            jest.spyOn(TiresService, 'getUserAccessScope').mockResolvedValue({
+                query: '',
+                countQuery: '',
+                queryParams: []
+            });
+            const mockTires = [{ id: 1, code: "ABC-1234", brand: "Michelin", model: "X-ICE", price: "100.00", status: "available", durability_km: 1000, user_id: 1 }];
             const mockTotal = [{ total: 1 }];
 
             jest.spyOn(db, 'promise').mockReturnValue({
                 query: jest.fn()
-                    .mockResolvedValueOnce([[]])
                     .mockResolvedValueOnce([mockTotal]) // Retorno da contagem total
                     .mockResolvedValueOnce([mockTires]) // Retorno dos pneus
             } as any);
@@ -59,36 +65,48 @@ describe('TiresService', () => {
         });
 
         it("deve aplicar filtros corretamente", async () => {
-            const mockTires = [{ id: 2, code: "XYZ-0456", brand: "Pirelli", model: "Winter", status: "in use" }];
-            const mockTotal = [{ total: 1 }];
-
-            jest.spyOn(db, 'promise').mockReturnValue({
-                query: jest.fn()
-                    .mockResolvedValueOnce([[]])
-                    .mockResolvedValueOnce([mockTotal])
-                    .mockResolvedValueOnce([mockTires])
-            } as any);
-
-            const filters = { code: "XYZ-0456", brand: "Pirelli" };
-            const result = await TiresService.getAll(1, 10, filters, 2);
-            expect(result).toEqual({ tires: mockTires, total: 1 });
-        });
-
-        it("deve permitir que um gerente veja os registros dos subordinados", async () => {
-            const mockManager = [{ id: 3 }]; // Simula IDs de subordinados
+            jest.spyOn(TiresService, 'getUserAccessScope').mockResolvedValue({
+                query: '',
+                countQuery: '',
+                queryParams: []
+            });
             const mockTires = [{ id: 3, code: "LMN-0789", brand: "Goodyear", model: "All-Terrain", status: "available", user_id: 1 }];
             const mockTotal = [{ total: 1 }];
 
             jest.spyOn(db, 'promise').mockReturnValue({
                 query: jest.fn()
-                    .mockResolvedValueOnce([mockManager]) // Simula que o usuário é gerente
                     .mockResolvedValueOnce([mockTotal])
                     .mockResolvedValueOnce([mockTires])
             } as any);
 
-            const result = await TiresService.getAll(1, 10, {}, 5);
+            const filters = { code: "LMN-0789", brand: "Goodyear" };
+            const result = await TiresService.getAll(1, 10, filters, 1);
             expect(result).toEqual({ tires: mockTires, total: 1 });
         });
+
+        it('deve permitir que um gerente veja os registros dos subordinados', async () => {
+            jest.spyOn(TiresService, 'getUserAccessScope').mockResolvedValue({
+                query: '',
+                countQuery: '',
+                queryParams: []
+            });
+
+            (db.promise().query as jest.Mock)
+                .mockResolvedValueOnce([[{ total: 1 }]]) // Mock para a contagem total
+                .mockResolvedValueOnce([
+                    [{ id: 3, code: 'LMN-0789', brand: 'Goodyear', model: 'All-Terrain', status: 'available', user_id: 1 }]
+                ]); // Mock para os registros
+
+            const result = await TiresService.getAll(1, 10, {}, 1);
+
+            expect(result).toEqual({
+                tires: [
+                    { id: 3, code: 'LMN-0789', brand: 'Goodyear', model: 'All-Terrain', status: 'available', user_id: 1 }
+                ],
+                total: 1
+            });
+        });
+
 
         it("deve permitir que um usuário comum veja apenas seus próprios registros", async () => {
 
@@ -122,7 +140,7 @@ describe('TiresService', () => {
 
     describe('get', () => {
         it('deve retornar um pneu pelo ID', async () => {
-            const tire: ITires = { id: 1, code: '1234', brand: 'BrandX', model: 'ModelY', price: '100.00', user_id: 1 };
+            const tire: ITires = { id: 1, code: '1234', brand: 'BrandX', model: 'ModelY', price: '100.00', durability_km: 1000, user_id: 1 };
 
             (db.promise().query as jest.Mock).mockResolvedValueOnce([[tire]]);
 
@@ -148,7 +166,7 @@ describe('TiresService', () => {
     describe('getTiresByCode', () => {
         it('deve retornar o pneu se não estiver associado a um veículo', async () => {
             const code = 'PNEU123';
-            const mockTire: ITires = { id: 1, code: 'PNEU123', brand: 'Pirelli', model: 'Winter', price: '100.00' };
+            const mockTire: ITires = { id: 1, code: 'PNEU123', brand: 'Pirelli', model: 'Winter', price: '100.00', durability_km: 1000, user_id: 1 };
 
             // Mock da query para contar a associação de pneus
             (db.promise().query as jest.Mock).mockResolvedValueOnce([[{ count: 0 }]]);
@@ -197,19 +215,19 @@ describe('TiresService', () => {
 
     describe('update', () => {
         it('deve atualizar um pneu e retornar vazio', async () => {
-            const tire: ITires = { id: 1, code: '1234', brand: 'BrandX', model: 'ModelY', price: '100.00', user_id: 1 };
+            const tire: ITires = { id: 1, code: '1234', brand: 'BrandX', model: 'ModelY', price: '100.00', status: 'available', durability_km: 1000, user_id: 1 };
 
             (db.promise().query as jest.Mock).mockResolvedValueOnce(null);
 
             await TiresService.update(1, tire);
             expect(db.promise().query).toHaveBeenCalledWith(
-                `UPDATE tires SET code = ?, brand = ?, model = ?, price = ?, user_id = ? WHERE id = ?`,
-                [tire.code, tire.brand, tire.model, tire.price, tire.user_id, 1]
+                `UPDATE tires SET code = ?, brand = ?, model = ?, price = ?, status = ?, durability_km = ? WHERE id = ?`,
+                [tire.code, tire.brand, tire.model, tire.price, tire.status, tire.durability_km, 1]
             );
         });
 
         it('deve gerar um erro se a consulta ao banco de dados falhar', async () => {
-            const tire: ITires = { id: 1, code: '1234', brand: 'BrandX', model: 'ModelY', price: '100.00', user_id: 1 };
+            const tire: ITires = { id: 1, code: '1234', brand: 'BrandX', model: 'ModelY', price: '100.00', status: 'available', durability_km: 1000, user_id: 1 };
 
             (db.promise().query as jest.Mock).mockRejectedValueOnce(new Error('Database error'));
 

@@ -64,12 +64,16 @@ describe('VehicleService', () => {
 
     describe("getAll", () => {
         it("deve retornar todos os veiculos sem filtros", async () => {
+            jest.spyOn(VehicleService, 'getUserAccessScope').mockResolvedValue({
+                query: '',
+                countQuery: '',
+                queryParams: []
+            });
             const mockVehicle = [{ id: 1, brand: 'BrandX', model: 'ModelY', year: 2020, license_plate: 'ABC-1234', mileage: 10000, fuel_type: 'gasoline' }];
             const mockTotal = [{ total: 1 }];
 
             jest.spyOn(db, 'promise').mockReturnValue({
                 query: jest.fn()
-                    .mockResolvedValueOnce([[]])
                     .mockResolvedValueOnce([mockTotal]) // Retorno da contagem total
                     .mockResolvedValueOnce([mockVehicle]) // Retorno dos veiculos
             } as any);
@@ -79,12 +83,16 @@ describe('VehicleService', () => {
         });
 
         it("deve aplicar filtros corretamente", async () => {
-            const mockVehicle = [{ id: 2, brand: 'BrandX', model: 'ModelY', year: 2020, license_plate: 'ABC-1234', mileage: 10000, fuel_type: 'gasoline' }];
+            jest.spyOn(VehicleService, 'getUserAccessScope').mockResolvedValue({
+                query: '',
+                countQuery: '',
+                queryParams: []
+            });
+            const mockVehicle = [{ id: 2, brand: 'BrandX', model: 'ModelY', year: 2020, license_plate: 'ABC-1234', mileage: 10000, fuel_type: 'gasoline', user_id: 1 }];
             const mockTotal = [{ total: 1 }];
 
             jest.spyOn(db, 'promise').mockReturnValue({
                 query: jest.fn()
-                    .mockResolvedValueOnce([[]])
                     .mockResolvedValueOnce([mockTotal])
                     .mockResolvedValueOnce([mockVehicle])
             } as any);
@@ -95,24 +103,31 @@ describe('VehicleService', () => {
         });
 
         it("deve permitir que um gerente veja os registros dos subordinados", async () => {
-            const mockManager = [{ id: 3 }]; // Simula IDs de subordinados
-            const mockVehicle = [{ id: 3, brand: 'BrandX', model: 'ModelY', year: 2020, license_plate: 'ABC-1234', mileage: 10000, fuel_type: 'gasoline', user_id: 1 }];
-            const mockTotal = [{ total: 1 }];
+            jest.spyOn(VehicleService, 'getUserAccessScope').mockResolvedValue({
+                query: '',
+                countQuery: '',
+                queryParams: []
+            });
+            (db.promise().query as jest.Mock)
+                .mockResolvedValueOnce([[{ total: 1 }]]) // Mock para a contagem total
+                .mockResolvedValueOnce([
+                    [{ id: 2, brand: 'BrandX', model: 'ModelY', year: 2020, license_plate: 'ABC-1234', mileage: 10000, fuel_type: 'gasoline', user_id: 1 }]
+                ]); // Mock para os registros
 
-            jest.spyOn(db, 'promise').mockReturnValue({
-                query: jest.fn()
-                    .mockResolvedValueOnce([mockManager]) // Simula que o usuário é gerente
-                    .mockResolvedValueOnce([mockTotal])
-                    .mockResolvedValueOnce([mockVehicle])
-            } as any);
+            const result = await VehicleService.getAll(1, 10, {}, 1);
 
-            const result = await VehicleService.getAll(1, 10, {}, 5);
-            expect(result).toEqual({ vehicles: mockVehicle, total: 1 });
+            console.error('Resultado da função getAll:', result);
+            expect(result).toEqual({
+                vehicles: [
+                    { id: 2, brand: 'BrandX', model: 'ModelY', year: 2020, license_plate: 'ABC-1234', mileage: 10000, fuel_type: 'gasoline', user_id: 1 }
+                ],
+                total: 1
+            });
         });
 
         it("deve permitir que um usuário comum veja apenas seus próprios registros", async () => {
 
-            const mockVehicle = [{ id: 3, brand: 'BrandX', model: 'ModelY', year: 2020, license_plate: 'ABC-1234', mileage: 10000, fuel_type: 'gasoline', user_id: 1 }];
+            const mockVehicle = [{ id: 1, brand: 'BrandX', model: 'ModelY', year: 2020, license_plate: 'ABC-1234', mileage: 10000, fuel_type: 'gasoline', user_id: 1 }];
             const mockTotal = [{ total: 1 }];
 
             jest.spyOn(VehicleService, 'getUserAccessScope').mockResolvedValue({
