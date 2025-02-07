@@ -1,7 +1,7 @@
+import { WebSocket } from 'ws';
 import db from '../config/db';
 import { ITires } from "../models/Tires";
-import { IUser } from '../models/User';
-import BaseService from '../services/BaseService';
+import NotificationService from '../services/notifications/NotificationTiresService';
 import TiresService from '../services/TiresService';
 
 jest.mock('../config/db', () => ({
@@ -235,6 +235,55 @@ describe('TiresService', () => {
         });
     });
 
+    describe('updateStatusAfterAnalysis', () => {
+        it('deve atualizar o status para "lower" quando o motivo for "defect"', async () => {
+            const tireId = 1;
+            const status = 'available';
+            const replacement_reason = 'defect';
+
+            // Mock da função query para simular uma execução bem-sucedida
+            (db.promise().query as jest.Mock).mockResolvedValueOnce([{}, null]);
+
+            await TiresService.updateStatusAfterAnalysis(tireId, status, replacement_reason);
+
+            // Verifica se a função query foi chamada com os parâmetros corretos
+            expect(db.promise().query).toHaveBeenCalledWith(
+                'UPDATE tires SET status = ? WHERE id = ?',
+                ['lower', tireId]
+            );
+        });
+        it('deve atualizar o status para "available" quando o motivo não for "defect"', async () => {
+            const tireId = 1;
+            const status = 'lower';
+            const replacement_reason = 'reform';
+
+            // Mock da função query para simular uma execução bem-sucedida
+            (db.promise().query as jest.Mock).mockResolvedValueOnce([{}, null]);
+
+            await TiresService.updateStatusAfterAnalysis(tireId, status, replacement_reason);
+
+            // Verifica se a função query foi chamada com os parâmetros corretos
+            expect(db.promise().query).toHaveBeenCalledWith(
+                'UPDATE tires SET status = ? WHERE id = ?',
+                ['available', tireId]
+            );
+        });
+        it('deve lançar um erro se a atualização no banco de dados falhar', async () => {
+            const tireId = 1;
+            const status = 'available';
+            const replacement_reason = 'defect';
+
+            // Mock da função query para simular um erro
+            (db.promise().query as jest.Mock).mockRejectedValueOnce(new Error('Erro no banco de dados'));
+
+            // Verifica se a função lança um erro
+            await expect(
+                TiresService.updateStatusAfterAnalysis(tireId, status, replacement_reason)
+            ).rejects.toThrow('Erro ao atualizar o status do pneu. Tente novamente mais tarde.');
+        });
+
+    })
+
     describe('destroy', () => {
         it('deve excluir um pneu se ele não estiver em uso por nenhum veículo', async () => {
             (db.promise().query as jest.Mock)
@@ -260,5 +309,144 @@ describe('TiresService', () => {
             await expect(TiresService.destroy(1)).rejects.toThrow("Este pneu não pode ser excluído, pois está em uso por um veículo.");
         });
     });
+
+    class MockWebSocketServer {
+        clients: Set<any>;
+        constructor() {
+            this.clients = new Set();
+        }
+        close() {
+            this.clients.forEach((client) => client.close()); // Fecha todos os clientes
+            this.clients.clear();
+        }
+    }
+
+    jest.mock('ws', () => {
+        Server: MockWebSocketServer
+    })
+
+    jest.mock('../services/notifications/NotificationTiresService', () => ({
+        NotificationService: {
+            sendEmail: jest.fn()
+        }
+    }))
+
+    describe('checkTireWear', () => {
+        let wss: any;
+
+        beforeEach(() => {
+            jest.clearAllMocks();
+            jest.spyOn(console, 'error').mockImplementation(() => { });
+            jest.spyOn(console, 'log').mockImplementation(() => { });
+            // Cria uma instância mockada do WebSocket Server
+            wss = new MockWebSocketServer();
+
+            // Mock de um cliente WebSocket
+            const mockClient = { readyState: 1, send: jest.fn(), close: jest.fn() }; // readyState 1 = OPEN
+            wss.clients.add(mockClient);
+        });
+
+        afterEach(() => {
+            jest.clearAllMocks(); // Limpa os mocks após cada teste
+        });
+
+        afterAll(() => {
+            // Fecha as conexões WebSocket após o término dos testes
+            wss.close();
+        });
+
+        it('deve enviar notificações quando há pneus para troca', async () => {
+            // Mock da query do banco de dados
+            const mockRows = [
+                {
+                    id: 1,
+                    license_plate: 'ABC-1234',
+                    current_mileage: 50000,
+                    email: 'user@example.com',
+                    code: 'P001',
+                },
+            ];
+            (db.promise().query as jest.Mock).mockResolvedValueOnce([mockRows, null]);
+
+            const sendEmailMock = jest.spyOn(NotificationService, 'sendEmail').mockResolvedValueOnce(undefined);
+
+            // Executa o método
+            await TiresService.checkTireWear(wss);
+
+            // Verifica se a query foi chamada
+            expect(db.promise().query).toHaveBeenCalled();
+
+            // Verifica se as notificações foram enviadas via WebSocket
+            const mockClient = Array.from(wss.clients)[0] as any;
+            expect(mockClient.send).toHaveBeenCalledWith(
+                JSON.stringify({
+                    type: 'tire_replacement',
+                    message: 'Pneu do veículo ABC-1234 precisa ser trocado!',
+                    data: mockRows[0],
+                })
+            );
+
+
+
+            // Verifica se o e-mail foi enviado
+            await expect(NotificationService.sendEmail).toHaveBeenCalledWith({
+                to: 'user@example.com',
+                subject: 'Troca de Pneus Necessária',
+                message: 'O pneu P001 do veículo ABC-1234 atingiu a quilometragem de substituição. Agende a troca o quanto antes.',
+            });
+
+            // Verifica os logs
+            expect(console.error).toHaveBeenCalledWith('Iniciando verificação de pneus...');
+            expect(console.error).toHaveBeenCalledWith('🔴 1 pneus precisam de troca.');
+            expect(console.log).toHaveBeenCalledWith('🔴 O pneu P001 do veículo ABC-1234 precisa ser trocado!');
+            expect(console.log).toHaveBeenCalledWith('✅ Notificação enviada para user@example.com');
+        });
+
+        it('deve logar que nenhum pneu precisa de troca', async () => {
+            // Mock da query do banco de dados (sem resultados)
+            (db.promise().query as jest.Mock).mockResolvedValueOnce([[], null]);
+
+            // Executa o método
+            await TiresService.checkTireWear(wss);
+
+            // Verifica se a query foi chamada
+            expect(db.promise().query).toHaveBeenCalled();
+
+            // Verifica os logs
+            expect(console.log).toHaveBeenCalledWith('✅ Nenhum pneu precisa de troca agora.');
+        });
+
+        it('deve logar erro se a query falhar', async () => {
+            // Mock da query do banco de dados (erro)
+            (db.promise().query as jest.Mock).mockRejectedValueOnce(new Error('Erro no banco de dados'));
+
+            // Executa o método
+            await TiresService.checkTireWear(wss);
+
+            // Verifica se o erro foi logado
+            expect(console.error).toHaveBeenCalledWith('Erro ao verificar pneus:', expect.any(Error));
+        });
+
+        it('deve logar erro se os dados do pneu estiverem incompletos', async () => {
+            // Mock da query do banco de dados (dados incompletos)
+            const mockRows = [
+                {
+                    id: 1,
+                    license_plate: null, // Dado incompleto
+                    current_mileage: 50000,
+                    email: null, // Dado incompleto
+                    code: 'P001',
+                },
+            ];
+            (db.promise().query as jest.Mock).mockResolvedValueOnce([mockRows, null]);
+
+            // Executa o método
+            await TiresService.checkTireWear(wss);
+
+            // Verifica se o erro foi logado
+            expect(console.error).toHaveBeenCalledWith('Dados incompletos para o pneu:', mockRows[0]);
+        });
+    });
+
 
 });

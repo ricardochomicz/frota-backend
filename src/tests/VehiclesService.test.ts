@@ -116,7 +116,6 @@ describe('VehicleService', () => {
 
             const result = await VehicleService.getAll(1, 10, {}, 1);
 
-            console.error('Resultado da função getAll:', result);
             expect(result).toEqual({
                 vehicles: [
                     { id: 2, brand: 'BrandX', model: 'ModelY', year: 2020, license_plate: 'ABC-1234', mileage: 10000, fuel_type: 'gasoline', user_id: 1 }
@@ -192,6 +191,20 @@ describe('VehicleService', () => {
             );
         });
     });
+
+    describe('updateMileage', () => {
+        it('deve atualizar o kilometragem do veículo', async () => {
+            const vehicle: IVehicle = { id: 1, brand: 'BrandX', model: 'ModelY', year: 2020, license_plate: 'ABC-1234', mileage: 10000, fuel_type: 'gasoline' };
+
+            (db.promise().query as jest.Mock).mockResolvedValueOnce(null);
+
+            await VehicleService.updateMileage(1, vehicle.mileage);
+            expect(db.promise().query).toHaveBeenCalledWith(
+                `UPDATE vehicles SET mileage = ? WHERE id = ?`,
+                [vehicle.mileage, vehicle.id]
+            );
+        })
+    })
 
     describe('destroy', () => {
         it('deve excluir um veiculo', async () => {

@@ -1,6 +1,5 @@
 import db from '../config/db';
 import { ITires, TireCheckResult } from "../models/Tires";
-import { setupWebSocket } from '../websocket';
 import BaseService from './BaseService';
 import NotificationService from './notifications/NotificationTiresService';
 import WebSocket from 'ws';
@@ -26,7 +25,6 @@ class TiresService extends BaseService {
             const [result]: any = await db.promise().query(query, [code, brand, model, price, status, durability_km, userId]);
             return result;
         } catch (error) {
-            console.error("[ERROR API] Erro ao criar pneus:", error);
             throw new Error('Erro ao criar pneus. Tente novamente mais tarde.');
         }
     }
@@ -77,7 +75,6 @@ class TiresService extends BaseService {
             const [rows]: any = await db.promise().query(query, queryParams);
             return { tires: rows, total };
         } catch (error) {
-            console.error('[ERROR API] Erro ao buscar pneus:', error);
             throw new Error('Erro ao buscar pneus. Tente novamente mais tarde.');
         }
     }
@@ -96,7 +93,6 @@ class TiresService extends BaseService {
             const [rows]: any = await db.promise().query(query, [id]);
             return rows[0] || null;
         } catch (error) {
-            console.error("[ERROR API] Erro ao buscar pneu:", error);
             throw new Error('Erro ao buscar pneu. Tente novamente mais tarde.');
         }
     }
@@ -119,10 +115,8 @@ class TiresService extends BaseService {
 
             // Se o pneu estiver associado a algum veículo, não pode ser retornado
             if (checkRows[0].count > 0 && checkRows[0].status === "in use") {
-                console.error("[ERROR API]getTiresByCode Pneus ja associado a um veiculo");
                 throw new Error('Pneu já está associado a um veículo.');
             } else if (checkRows[0].status === 'lower') {
-                console.error("[ERROR API] Pneu ja baixado");
                 throw new Error('Pneu já baixado.');
             } else {
                 const query = `SELECT * FROM tires WHERE code = ?`;
@@ -130,10 +124,7 @@ class TiresService extends BaseService {
                 const [rows]: any = await db.promise().query(query, [code]);
                 return rows[0] || null;
             }
-
-
         } catch (error) {
-            console.error("[ERROR API] Erro ao buscar pneus:", error);
             throw new Error('Erro ao buscar pneus. Tente novamente mais tarde.');
         }
     }
@@ -152,7 +143,6 @@ class TiresService extends BaseService {
         try {
             await db.promise().query(query, [code, brand, model, price, status, durability_km, id]);
         } catch (error) {
-            console.error("[ERROR API] Erro ao atualizar pneu:", error);
             throw new Error('Erro ao atualizar pneu. Tente novamente mais tarde.');
         }
     }
@@ -166,7 +156,6 @@ class TiresService extends BaseService {
 
             // Se o pneu estiver associado a algum veículo, não pode ser excluído
             if (result[0].count > 0) {
-                console.error("[ERROR API] Este pneu não pode ser excluído, pois está em uso por um veículo.");
                 throw new Error("Este pneu não pode ser excluído, pois está em uso por um veículo.");
             }
 
@@ -175,7 +164,6 @@ class TiresService extends BaseService {
             await db.promise().query(deleteQuery, [tireId]);
 
         } catch (error) {
-            console.error("[ERROR API] Erro ao excluir pneu:", error);
             throw new Error("Este pneu não pode ser excluído, pois está em uso por um veículo.");
         }
     }
@@ -191,7 +179,7 @@ class TiresService extends BaseService {
         try {
             await db.promise().query(query, [status, tireId]);
         } catch (error) {
-            console.error("[ERROR API] Erro ao atualizar status do pneu:", error);
+            throw new Error('Erro ao atualizar o status do pneu. Tente novamente mais tarde.');
         }
     }
 

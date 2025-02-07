@@ -28,7 +28,7 @@ class CostAnalysisService extends BaseService {
 
         let query = `
             SELECT c.*, 
-                v.id as vehicle_id, v.license_plate, v.model, v.brand, v.year, v.mileage,
+                v.id as vehicle_id, v.license_plate, v.model, v.brand AS brand_vehicle, v.year, v.mileage,
                 u.id AS user_id, u.name AS user_name, u.email AS user_email,
                 t.id AS tire_id, t.code, t.brand, t.model, t.price, t.durability_km
             FROM cost_analysis c

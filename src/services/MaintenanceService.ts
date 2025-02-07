@@ -2,7 +2,7 @@ import IMaintenance from "../models/Maintenance";
 import db from "../config/db";
 import moment from "moment";
 import BaseService from "./BaseService";
-import { IUser } from "../models/User";
+
 const PAGE = 1;
 const LIMIT = 10;
 class MaintenanceService extends BaseService {
@@ -15,7 +15,6 @@ class MaintenanceService extends BaseService {
             const [result]: any = await db.promise().query(query, [vehicle_id, type, description, mileage_at_maintenance, date_format, userId]);
             return { id: result.insertId }
         } catch (error) {
-            console.error("[ERROR API] Erro ao criar manutenção:", error);
             throw new Error('Erro na requisição. Tente novamente mais tarde.');
         }
     }
@@ -95,7 +94,6 @@ class MaintenanceService extends BaseService {
         try {
             const [[{ total }]]: any = await db.promise().query(countQuery, queryParams.slice(0, -2));
             const [rows]: any = await db.promise().query(query, queryParams);
-            console.error(rows);
             const formattedRows = rows.map((maintenance: any) => ({
                 id: maintenance.id,
                 date: maintenance.date,
@@ -123,7 +121,6 @@ class MaintenanceService extends BaseService {
 
             return { maintenances: formattedRows, total };
         } catch (error) {
-            console.error("[ERROR API] Erro ao buscar manutenções:", error);
             throw new Error('Erro ao buscar manutenções. Tente novamente mais tarde.');
         }
     }
@@ -137,7 +134,6 @@ class MaintenanceService extends BaseService {
             const [rows]: any = await db.promise().query(query, [id]);
             return rows[0] || null;
         } catch (error) {
-            console.error("[ERROR API] Erro ao buscar manutenção por ID:", error);
             throw new Error('Erro ao buscar manutenções. Tente novamente mais tarde.');
         }
     }
@@ -148,7 +144,6 @@ class MaintenanceService extends BaseService {
             const [rows]: any = await db.promise().query(query, [vehicle_id]);
             return rows;
         } catch (error) {
-            console.error("[ERROR API] Erro ao buscar manutenções por veículo:", error);
             throw new Error('Erro ao buscar manutenções. Tente novamente mais tarde.');
         }
     }
@@ -161,7 +156,6 @@ class MaintenanceService extends BaseService {
             // const updatedMaintenance = await this.getMaintenanceWithVehicle(id);
             // return updatedMaintenance;
         } catch (error) {
-            console.error("[ERROR API] Erro ao atualizar manutenção:", error);
             throw new Error('Erro ao atualizar manutenção. Tente novamente mais tarde.');
         }
     }
@@ -205,7 +199,6 @@ class MaintenanceService extends BaseService {
                 }
             };
         } catch (error) {
-            console.error("[ERROR API] Erro ao buscar dados da manutenção e veículo:", error);
             throw new Error('Erro ao buscar dados da manutenção e veículo.');
         }
     }
@@ -216,7 +209,6 @@ class MaintenanceService extends BaseService {
         try {
             await db.promise().query(query, [id]);
         } catch (error) {
-            console.error("[ERROR API] Erro ao deletar manutenção:", error);
             throw new Error('Erro ao deletar manutenção. Tente novamente mais tarde.');
         }
     }
@@ -244,7 +236,6 @@ class MaintenanceService extends BaseService {
 
             await db.promise().query(updateQuery, [newStatus, maintenanceId]);
         } catch (error) {
-            console.error("[ERROR API] Erro ao atualizar status da manutenção:", error);
             throw new Error("Erro ao atualizar manutenção.");
         }
     }

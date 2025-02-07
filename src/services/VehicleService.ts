@@ -139,7 +139,6 @@ class VehicleService extends BaseService {
         try {
             await db.promise().query(query, [mileage, id]);
         } catch (error) {
-            console.error("[ERROR API] Erro ao atualizar kilometragem do veículo:", error);
             throw new Error('Erro ao atualizar veículo. Tente novamente mais tarde.');
         }
     }
