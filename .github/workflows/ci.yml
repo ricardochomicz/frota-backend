@@ -24,8 +24,11 @@ jobs:
       - name: Instalar dependências
         run: npm install 
 
+      - name: Verificar instalação do Jest
+        run: npx jest --version  # Verifica se o Jest está instalado corretamente
+
       - name: Configurar variáveis de ambiente
         run: echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" >> $GITHUB_ENV
 
       - name: Rodar testes
-        run: npm test 
+        run: npm test

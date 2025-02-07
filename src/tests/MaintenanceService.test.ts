@@ -242,6 +242,73 @@ describe("MaintenanceService", () => {
     });
 
 
+    describe('MaintenanceService.updateMaintenanceStatus', () => {
+        it('deve atualizar o status para "concluída" quando todos os pneus forem trocados', async () => {
+            const maintenanceId = 1;
+
+            // Mock da consulta SELECT
+            const mockResult = [
+                {
+                    pending_tires: 0,
+                    replaced_tires: 3,
+                    total_tires: 3,
+                }
+            ];
+            (db.promise().query as jest.Mock).mockResolvedValueOnce([mockResult, null]);
+
+            // Mock da consulta UPDATE
+            const mockUpdateQuery = jest.spyOn(db.promise(), 'query').mockResolvedValueOnce([[], []]);
+
+            // Executa o método
+            await MaintenanceService.updateMaintenanceStatus(maintenanceId);
+
+            // Verifica se a consulta UPDATE foi chamada com o status "concluída"
+            expect(mockUpdateQuery).toHaveBeenCalledWith(
+                'UPDATE maintenance SET status = ? WHERE id = ?',
+                ['concluída', maintenanceId]
+            );
+        });
+
+        it('deve atualizar o status para "pendente" quando ainda houver pneus pendentes para troca', async () => {
+            const maintenanceId = 1;
+
+            // Mock da consulta SELECT
+            const mockResult = [
+                {
+                    pending_tires: 1,
+                    replaced_tires: 2,
+                    total_tires: 3,
+                }
+            ];
+            (db.promise().query as jest.Mock).mockResolvedValueOnce([mockResult, null]);
+
+            // Mock da consulta UPDATE
+            const mockUpdateQuery = jest.spyOn(db.promise(), 'query').mockResolvedValueOnce([[], []]);
+
+            // Executa o método
+            await MaintenanceService.updateMaintenanceStatus(maintenanceId);
+
+            // Verifica se a consulta UPDATE foi chamada com o status "pendente"
+            expect(mockUpdateQuery).toHaveBeenCalledWith(
+                'UPDATE maintenance SET status = ? WHERE id = ?',
+                ['pendente', maintenanceId]
+            );
+        });
+
+        it('deve lançar um erro se a consulta SELECT falhar', async () => {
+            const maintenanceId = 1;
+
+            // Mock da consulta SELECT para falhar
+            (db.promise().query as jest.Mock).mockRejectedValueOnce(new Error('Erro no banco de dados'));
+
+            // Executa o método e verifica se um erro é lançado
+            await expect(MaintenanceService.updateMaintenanceStatus(maintenanceId)).rejects.toThrow(
+                'Erro ao atualizar manutenção.'
+            );
+        });
+    });
+
+
     describe("destroy", () => {
         it("deve deletar uma manutenção", async () => {
             (db.promise().query as jest.Mock).mockResolvedValueOnce([{}]);

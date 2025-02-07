@@ -87,7 +87,6 @@ class MaintenanceService extends BaseService {
         countQuery += userScopeCountQuery;
         queryParams = [...queryParams, ...userScopeParams];
 
-
         // query += ` LIMIT ? OFFSET ?`; 
         queryParams.push(limit, offset);
 
@@ -125,6 +124,11 @@ class MaintenanceService extends BaseService {
         }
     }
 
+    /**
+     * 
+     * @param id 
+     * @returns retorna uma manutenção ou null
+     */
     static async get(id: number): Promise<IMaintenance | null> {
         const query = `SELECT m.*, v.mileage 
                         FROM maintenance m
@@ -138,6 +142,11 @@ class MaintenanceService extends BaseService {
         }
     }
 
+    /**
+     * 
+     * @param vehicle_id 
+     * @returns retorna as manutenções de um veículo
+     */
     static async getByVehicleId(vehicle_id: number): Promise<IMaintenance[]> {
         const query = `SELECT * FROM maintenance WHERE vehicle_id = ?`;
         try {
@@ -148,6 +157,12 @@ class MaintenanceService extends BaseService {
         }
     }
 
+    /**
+     * 
+     * @param id 
+     * @param maintenance 
+     * @returns faz update na manutenção
+     */
     static async update(id: number, maintenance: IMaintenance) {
         const { vehicle_id, type, description, mileage_at_maintenance, user_id } = maintenance;
         const query = `UPDATE maintenance SET vehicle_id = ?, type = ?, description = ?, mileage_at_maintenance = ?, user_id = ? WHERE id = ?`;
@@ -160,6 +175,11 @@ class MaintenanceService extends BaseService {
         }
     }
 
+    /**
+     * 
+     * @param maintenance_id 
+     * @returns retorna as manutenções de um veículo
+     */
     static async getMaintenanceWithVehicle(maintenance_id: number) {
         const query = `
             SELECT m.*, 
@@ -171,7 +191,6 @@ class MaintenanceService extends BaseService {
 
         try {
             const [rows]: any = await db.promise().query(query, [maintenance_id]);
-
             if (rows.length === 0) {
                 console.error("[ERROR API] Manutenção não encontrada:", maintenance_id);
                 throw new Error("Manutenção não encontrada.");
@@ -203,6 +222,11 @@ class MaintenanceService extends BaseService {
         }
     }
 
+    /**
+     * 
+     * @param id 
+     * @returns deleta uma manutenção
+     */
     static async destroy(id: number) {
         const query = `DELETE FROM maintenance WHERE id = ?`;
 
@@ -213,6 +237,13 @@ class MaintenanceService extends BaseService {
         }
     }
 
+
+    /**
+     * 
+     * @param maintenanceId 
+     * @returns verifica se o campo to_replace da tabela vehicles está como 0
+     * Caso a manutenção tenha 0 pneus pendentes, atualiza o status da manutenção para concluida
+     */
     static async updateMaintenanceStatus(maintenanceId: number): Promise<void> {
         const query = `
             SELECT 
