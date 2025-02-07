@@ -147,6 +147,11 @@ class TiresService extends BaseService {
         }
     }
 
+    /**
+     * 
+     * @param tireId 
+     * deleta um pneu que não esteja associado na tabela vehicle_tires
+     */
     static async destroy(tireId: number): Promise<void> {
         // Verifica se o pneu está associado a algum veículo na tabela pivot
         const checkQuery = "SELECT COUNT(*) AS count FROM vehicle_tires WHERE tire_id = ?";
@@ -168,6 +173,14 @@ class TiresService extends BaseService {
         }
     }
 
+
+    /**
+     * 
+     * @param tireId 
+     * @param status 
+     * @param replacement_reason 
+     * atualiza o status do pneu após criar uma análise
+     */
     static async updateStatusAfterAnalysis(tireId: number, status: string, replacement_reason: string): Promise<void> {
 
         const query = `UPDATE tires SET status = ? WHERE id = ?`;
@@ -183,6 +196,11 @@ class TiresService extends BaseService {
         }
     }
 
+    /**
+     * 
+     * @param wss 
+     * função para verificar se existem pneus que precisam de troca
+     */
     static async checkTireWear(wss: WebSocket.Server) {
         const query = `
             SELECT 

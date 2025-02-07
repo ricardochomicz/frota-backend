@@ -2,6 +2,11 @@ import db from '../config/db';
 
 class BaseService {
 
+    /**
+     * 
+     * @param userId 
+     * cria a query para buscar os registros do usuário logado ou de seus subordinados
+     */
     static async getUserAccessScope(userId: number): Promise<any> {
         let query = '';
         let countQuery = '';
@@ -36,7 +41,11 @@ class BaseService {
 
 
 
-
+    /**
+     * @param filters 
+     * @param column 
+     * @returns 
+     */
     static async getFilters(filters: any, column: string): Promise<any> {
         let query = '';
         let countQuery = '';

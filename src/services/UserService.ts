@@ -8,10 +8,14 @@ const LIMIT = 5;
 const PAGE = 1;
 
 class UserService extends BaseService {
+
+    /**
+     * @param user IUser
+     * cadastra um novo usuário
+     */
     static async create(user: IUser): Promise<any> {
         const { name, email, password_hash, role, manager_id } = user;
 
-        console.error('[ERRO] Falha ao cadastrar usuário:', email);
         const [existingUser]: any = await db.promise().query(
             'SELECT * FROM users WHERE email = ?', [email]
         );
@@ -28,11 +32,15 @@ class UserService extends BaseService {
             const [result]: any = await db.promise().query(query, [name, email, hash, role, manager_id]);
             return result;
         } catch (err) {
-            console.error('[ERRO] Falha ao cadastrar usuário:', err);
             throw new Error('[ERRO API] Erro ao cadastrar usuário.');
         }
     }
 
+    /**
+     * 
+     * @param email string
+     * busca um usuário pelo email
+     */
     static async findByEmail(email: string): Promise<IUser | null> {
         try {
             const [result]: any = await db.promise().query(
@@ -44,11 +52,20 @@ class UserService extends BaseService {
             }
             return result[0];
         } catch (err) {
-            console.error('[ERRO] Falha ao buscar usuário:', err);
             throw new Error('[ERRO API] Erro ao buscar usuário.');
         }
     }
 
+    /**
+     * 
+     * @param page 
+     * @param limit 
+     * @param filters 
+     * @param userId 
+     * Na tabela users tem o campo manager_id que identifica quem o gerencia
+     * manager_id pode ver os seus registros e também os seus subordinados
+     * Usuários que não tem manager_id são gerentes
+     */
     static async getAll(page = PAGE, limit = LIMIT, filters: { name?: string; role?: string; } = {}, userId?: any): Promise<{ users: IUser[], total: number }> {
         const offset = (Math.max(1, Number(page)) - 1) * Math.max(1, Number(limit));
 
@@ -82,11 +99,16 @@ class UserService extends BaseService {
             return { users: rows, total };
 
         } catch (error) {
-            console.error('[ERRO API] Falha ao buscar usuários:', error);
-            throw new Error('[ERRO API] Erro ao buscar usuários.');
+            throw new Error('Erro ao buscar usuários. Tente novamente mais tarde.');
         }
     }
 
+
+    /**
+     * 
+     * @param id 
+     * retora um usuário pelo id
+     */
     static async get(id: number): Promise<IUser | null> {
         try {
             const [rows]: any = await db.promise().query('SELECT id, name, email, role, manager_id, created_at, updated_at FROM users WHERE id = ?', [id]);
@@ -97,7 +119,13 @@ class UserService extends BaseService {
     }
 
 
-    static async update(id: number, user: IUserUpdate, authenticatedUser: IUser): Promise<void> {
+    /**
+     * 
+     * @param id 
+     * @param user 
+     * @param authenticatedUser 
+     */
+    static async update(id: number, user: IUserUpdate): Promise<void> {
 
         const { name, email, role } = user;
 
@@ -106,12 +134,16 @@ class UserService extends BaseService {
 
             await db.promise().query(query, [name, email, role, id]);
         } catch (error) {
-            console.error('[ERRO] Falha ao atualizar usuário:', error);
             throw new Error('[ERRO API] Erro ao atualizar usuário.');
         }
     }
 
 
+    /**
+     * 
+     * @param id 
+     * deleta um usuário
+     */
     static async delete(id: number): Promise<void> {
         try {
             await db.promise().query('DELETE FROM users WHERE id = ?', [id]);
@@ -120,6 +152,11 @@ class UserService extends BaseService {
         }
     }
 
+    /**
+     * 
+     * @param req 
+     * retorna o usuário logado
+     */
     static async me(req: any): Promise<IUser | null> {
         try {
             const { id } = req.user;

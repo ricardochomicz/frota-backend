@@ -15,7 +15,7 @@ export class UserAuthService {
                 throw new Error('Token inválido ou expirado.');
             }
 
-            // Agora que temos o id, podemos buscar o usuário no banco de dados
+            // Com o id, posso buscar o usuário no banco de dados
             const [rows]: any = await db.promise().query(
                 'SELECT id, name, email, role, created_at, updated_at FROM users WHERE id = ?',
                 [decoded.id]

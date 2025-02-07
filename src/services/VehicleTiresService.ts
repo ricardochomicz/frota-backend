@@ -33,7 +33,6 @@ class VehicleTiresService {
                 id: result.insertId + i // Garante que cada objeto tem um ID único
             }));
         } catch (error) {
-            console.error("[ERROR API] Erro ao inserir os pneus:", error);
             throw new Error('Erro ao inserir os pneus. Tente novamente mais tarde.');
         }
     }
@@ -60,13 +59,10 @@ class VehicleTiresService {
             WHERE vt.vehicle_id = ?;
         `;
 
-
         try {
             const [rows]: any = await db.promise().query(query, [vehicle_id]);
-            console.error(rows);
             return rows;
         } catch (error) {
-            console.error("[ERROR API] Erro ao buscar pneu:", error);
             throw new Error('Erro ao buscar pneu. Tente novamente mais tarde.');
         }
     }
@@ -92,7 +88,6 @@ class VehicleTiresService {
             const [rows]: any = await db.promise().query(query, [vehicle_id, maintenance_id]);
             return rows;
         } catch (error) {
-            console.error("[ERROR API] Erro ao buscar pneu:", error);
             throw new Error('Erro ao buscar pneu. Tente novamente mais tarde.');
         }
     }
@@ -117,7 +112,6 @@ class VehicleTiresService {
             const [rows]: any = await db.promise().query(query, [tire_id, vehicle_id]);
             return rows[0].total > 0; // Retorna true se o pneu já estiver em uso ou baixado
         } catch (error: any) {
-            console.error("[ERROR API] Pneu em uso por outro veículo ou pneu já foi baixado:", error);
             throw new Error("Erro ao verificar pneu. Tente novamente mais tarde.");
         }
     }
@@ -128,6 +122,26 @@ class VehicleTiresService {
      * @param id 
      * @param data 
      */
+    // static async removeTireToReplace(id: number, data: IVehicleTires): Promise<void> {
+    //     const { mileage_to_replace } = data;
+
+    //     const getMaintenanceQuery = `SELECT maintenance_id FROM vehicle_tires WHERE id = ?`;
+    //     const query = `UPDATE vehicle_tires SET to_replace = 1, mileage_to_replace = ? WHERE id = ?`;
+
+    //     try {
+    //         const [rows]: any = await db.promise().query(getMaintenanceQuery, [id]);
+    //         await db.promise().query(query, [mileage_to_replace, id]);
+    //         if (rows.length === 0) {
+    //             throw new Error(`Pneu com ID ${id} não encontrado.`);
+    //         }
+    //         const maintenance_id = rows[0].maintenance_id;
+
+    //         await MaintenanceService.updateMaintenanceStatus(maintenance_id);
+    //     } catch (error) {
+    //         throw new Error('Erro ao atualizar pneu. Tente novamente mais tarde.');
+    //     }
+    // }
+
     static async removeTireToReplace(id: number, data: IVehicleTires): Promise<void> {
         const { mileage_to_replace } = data;
 
@@ -136,17 +150,20 @@ class VehicleTiresService {
 
         try {
             const [rows]: any = await db.promise().query(getMaintenanceQuery, [id]);
-            console.error(rows);
-            await db.promise().query(query, [mileage_to_replace, id]);
-            console.error(rows);
+
+            // Verifica se o pneu foi encontrado
             if (rows.length === 0) {
                 throw new Error(`Pneu com ID ${id} não encontrado.`);
             }
+
             const maintenance_id = rows[0].maintenance_id;
 
+            // Atualiza o pneu para "to_replace"
+            await db.promise().query(query, [mileage_to_replace, id]);
+
+            // Atualiza o status da manutenção
             await MaintenanceService.updateMaintenanceStatus(maintenance_id);
         } catch (error) {
-            console.error("[ERROR API] Erro ao atualizar pneu:", error);
             throw new Error('Erro ao atualizar pneu. Tente novamente mais tarde.');
         }
     }
@@ -178,7 +195,6 @@ class VehicleTiresService {
             // Retorna verdadeiro se a remoção foi bem-sucedida
             return result.affectedRows > 0;
         } catch (error: any) {
-            console.error(`[ERRO] Falha ao remover pneu: ${error.message}`, error);
             throw new Error("Erro ao remover pneu. Tente novamente mais tarde.");
         }
     }
@@ -188,7 +204,6 @@ class VehicleTiresService {
             const query = `UPDATE tires SET status = ? WHERE id = ?`;
             await db.promise().query(query, [status, tire_id]);
         } catch (error) {
-            console.error("[ERROR API] Erro ao atualizar o status do pneu:", error);
             throw new Error('Erro ao atualizar o status do pneu. Tente novamente mais tarde.');
         }
     }
