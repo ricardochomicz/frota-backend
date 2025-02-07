@@ -27,15 +27,29 @@ class MaintenanceService extends BaseService {
         const offset = (Math.max(1, Number(page)) - 1) * Math.max(1, Number(limit));
 
         let query = `
-        SELECT m.*, 
-            v.id as vehicle_id, v.license_plate, v.model, v.brand, v.year, v.mileage,
-            u.id AS user_id, u.name AS user_name, u.email AS user_email
-        FROM maintenance m
-        JOIN vehicles v ON m.vehicle_id = v.id
-        LEFT JOIN users u ON u.id = m.user_id
-        JOIN vehicle_tires vt ON vt.maintenance_id = m.id
-        WHERE 1=1
-    `;
+            SELECT 
+                m.*, 
+                v.id AS vehicle_id, v.license_plate, v.model, v.brand, v.year, v.mileage,
+                u.id AS user_id, u.name AS user_name, u.email AS user_email,
+                COUNT(vt.id) AS total_tires, 
+                SUM(CASE 
+                        WHEN v.mileage >= (vt.mileage_at_installation + vt.predicted_replacement_mileage) 
+                        AND vt.to_replace = 0 
+                        THEN 1 
+                        ELSE 0 
+                    END) AS tires_pending
+            FROM maintenance m 
+            JOIN vehicles v ON m.vehicle_id = v.id
+            LEFT JOIN users u ON u.id = m.user_id
+            LEFT JOIN vehicle_tires vt ON vt.maintenance_id = m.id
+            WHERE 1=1
+            GROUP BY 
+                m.id, v.id, u.id
+
+            LIMIT 5 OFFSET 0
+        `;
+
+
         let countQuery = `SELECT COUNT(*) AS total
                           FROM maintenance m
                           JOIN vehicles v ON m.vehicle_id = v.id 
@@ -75,20 +89,24 @@ class MaintenanceService extends BaseService {
         queryParams = [...queryParams, ...userScopeParams];
 
 
-        query += ` LIMIT ? OFFSET ?`;
+        // query += ` LIMIT ? OFFSET ?`; 
         queryParams.push(limit, offset);
 
         try {
             const [[{ total }]]: any = await db.promise().query(countQuery, queryParams.slice(0, -2));
             const [rows]: any = await db.promise().query(query, queryParams);
+            console.error(rows);
             const formattedRows = rows.map((maintenance: any) => ({
                 id: maintenance.id,
                 date: maintenance.date,
                 type: maintenance.type,
                 description: maintenance.description,
                 mileage_at_maintenance: maintenance.mileage_at_maintenance,
+                status: maintenance.status,
                 created_at: maintenance.created_at,
                 updated_at: maintenance.updated_at,
+                to_replace: maintenance.to_replace,
+                tires_pending: maintenance.tires_pending,
                 vehicle: {
                     id: maintenance.vehicle_id,
                     license_plate: maintenance.license_plate,
@@ -102,7 +120,6 @@ class MaintenanceService extends BaseService {
                     email: maintenance.user_email
                 }
             }));
-            console.error(formattedRows);
 
             return { maintenances: formattedRows, total };
         } catch (error) {
@@ -203,6 +220,35 @@ class MaintenanceService extends BaseService {
             throw new Error('Erro ao deletar manutenção. Tente novamente mais tarde.');
         }
     }
+
+    static async updateMaintenanceStatus(maintenanceId: number): Promise<void> {
+        const query = `
+            SELECT 
+                COUNT(CASE WHEN vt.to_replace = 0 THEN 1 END) AS pending_tires,
+                COUNT(CASE WHEN vt.to_replace = 1 THEN 1 END) AS replaced_tires,
+                COUNT(*) AS total_tires
+            FROM vehicle_tires vt
+            WHERE vt.maintenance_id = ?
+        `;
+
+        const updateQuery = `UPDATE maintenance SET status = ? WHERE id = ?`;
+
+        try {
+            const [result]: any = await db.promise().query(query, [maintenanceId]);
+            const { pending_tires, replaced_tires, total_tires } = result[0];
+
+            let newStatus = "pendente";
+            if (replaced_tires === total_tires && total_tires > 0) {
+                newStatus = "concluída";
+            }
+
+            await db.promise().query(updateQuery, [newStatus, maintenanceId]);
+        } catch (error) {
+            console.error("[ERROR API] Erro ao atualizar status da manutenção:", error);
+            throw new Error("Erro ao atualizar manutenção.");
+        }
+    }
+
 }
 
 export default MaintenanceService;

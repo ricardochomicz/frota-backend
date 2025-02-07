@@ -1,5 +1,6 @@
 import db from "../config/db";
 import IVehicleTires from "../models/VehicleTires";
+import MaintenanceService from "./MaintenanceService";
 
 
 class VehicleTiresService {
@@ -44,20 +45,25 @@ class VehicleTiresService {
      */
     static async getTiresByVehicleId(vehicle_id: number): Promise<IVehicleTires | null> {
         const query = `
-        SELECT 
-            vt.*, 
-            t.code, 
-            t.brand, 
-            t.model, 
-            v.mileage 
-        FROM vehicle_tires vt 
-        INNER JOIN tires t ON vt.tire_id = t.id 
-        INNER JOIN vehicles v ON vt.vehicle_id = v.id 
-        WHERE vt.vehicle_id = ? 
-    `;
+            SELECT 
+                vt.*, 
+                t.code, 
+                t.brand, 
+                t.model, 
+                v.mileage,
+                m.status,
+                (v.mileage >= (vt.mileage_at_installation + vt.predicted_replacement_mileage)) AS needs_replacement
+            FROM vehicle_tires vt 
+            INNER JOIN tires t ON vt.tire_id = t.id  
+            INNER JOIN vehicles v ON vt.vehicle_id = v.id 
+            LEFT JOIN maintenance m ON vt.maintenance_id = m.id
+            WHERE vt.vehicle_id = ?;
+        `;
+
 
         try {
             const [rows]: any = await db.promise().query(query, [vehicle_id]);
+            console.error(rows);
             return rows;
         } catch (error) {
             console.error("[ERROR API] Erro ao buscar pneu:", error);
@@ -67,9 +73,18 @@ class VehicleTiresService {
 
     static async getVehicleTiresForMaintenance(vehicle_id: number, maintenance_id: number): Promise<IVehicleTires | null> {
         const query = `
-            SELECT vt.*, t.code, t.brand, t.model
-            FROM vehicle_tires vt
-            INNER JOIN tires t ON vt.tire_id = t.id
+            SELECT 
+                vt.*, 
+                t.code, 
+                t.brand, 
+                t.model, 
+                v.mileage,
+                m.status,
+                (v.mileage >= (vt.mileage_at_installation + vt.predicted_replacement_mileage)) AS needs_replacement
+            FROM vehicle_tires vt 
+            INNER JOIN tires t ON vt.tire_id = t.id  
+            INNER JOIN vehicles v ON vt.vehicle_id = v.id 
+            LEFT JOIN maintenance m ON vt.maintenance_id = m.id
             WHERE vt.vehicle_id = ? AND vt.maintenance_id = ?
         `;
 
@@ -108,17 +123,28 @@ class VehicleTiresService {
     }
 
 
+    /**
+     * 
+     * @param id 
+     * @param data 
+     */
     static async removeTireToReplace(id: number, data: IVehicleTires): Promise<void> {
-        const { tire_id, mileage_to_replace } = data;
-        // marca o pneu para ser trocado
+        const { mileage_to_replace } = data;
+
+        const getMaintenanceQuery = `SELECT maintenance_id FROM vehicle_tires WHERE id = ?`;
         const query = `UPDATE vehicle_tires SET to_replace = 1, mileage_to_replace = ? WHERE id = ?`;
 
-        //Atualiza o status do pneu para disponivel
-        // const updateTiresQuery = `UPDATE tires SET status = 'available' WHERE id = ?`;
-        await this.updateStatusTires(tire_id, 'available');
-
         try {
+            const [rows]: any = await db.promise().query(getMaintenanceQuery, [id]);
+            console.error(rows);
             await db.promise().query(query, [mileage_to_replace, id]);
+            console.error(rows);
+            if (rows.length === 0) {
+                throw new Error(`Pneu com ID ${id} não encontrado.`);
+            }
+            const maintenance_id = rows[0].maintenance_id;
+
+            await MaintenanceService.updateMaintenanceStatus(maintenance_id);
         } catch (error) {
             console.error("[ERROR API] Erro ao atualizar pneu:", error);
             throw new Error('Erro ao atualizar pneu. Tente novamente mais tarde.');
@@ -159,7 +185,7 @@ class VehicleTiresService {
 
     static async updateStatusTires(tire_id: number, status: string): Promise<void> {
         try {
-            const query = "UPDATE tires SET status = ? WHERE id = ?";
+            const query = `UPDATE tires SET status = ? WHERE id = ?`;
             await db.promise().query(query, [status, tire_id]);
         } catch (error) {
             console.error("[ERROR API] Erro ao atualizar o status do pneu:", error);

@@ -41,4 +41,10 @@ router.delete('/tires/:id/delete', authMiddleware, TireController.destroy);
  */
 router.get('/tires-code/:code', authMiddleware, TireController.getTiresByCode);
 
+/**
+ * @route PUT /tires/:id/update-status-for-analysis
+ * @description Atualiza o status um pneu pelo ID
+ */
+router.put('/tires/:id/update-status-after-analysis', authMiddleware, TireController.updateStatusAfterAnalysis);
+
 export default router;

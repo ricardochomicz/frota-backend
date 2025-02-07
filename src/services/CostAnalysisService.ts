@@ -9,10 +9,10 @@ class CostAnalysisService extends BaseService {
 
     static async create(costAnalysis: ICostAnalysis, userId?: number): Promise<{ data: ICostAnalysis }> {
         try {
-            const { vehicle_id, item_type, cost, purchase_date, performance_score, description, replacement_reason, tire_id, mileage_driven } = costAnalysis;
+            const { vehicle_id, item_type, cost, purchase_date, performance_score, description, replacement_reason, tire_id, mileage_driven, vehicle_tire_id } = costAnalysis;
             const dateFormat = moment(purchase_date).format('YYYY-MM-DD');
-            const query = `INSERT INTO cost_analysis (vehicle_id, item_type, cost, purchase_date, performance_score, description, replacement_reason, tire_id, mileage_driven,  user_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-            const [result]: any = await db.promise().query(query, [vehicle_id, item_type, cost, dateFormat, performance_score, description, replacement_reason, tire_id, mileage_driven, userId]);
+            const query = `INSERT INTO cost_analysis (vehicle_id, item_type, cost, purchase_date, performance_score, description, replacement_reason, tire_id, mileage_driven, vehicle_tire_id, user_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+            const [result]: any = await db.promise().query(query, [vehicle_id, item_type, cost, dateFormat, performance_score, description, replacement_reason, tire_id, mileage_driven, vehicle_tire_id, userId]);
             return result;
         } catch (error) {
             console.error("[ERROR API] Erro ao criar analise de custo:", error);

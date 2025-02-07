@@ -62,15 +62,9 @@ class VehicleTiresController {
     static async removeTireToReplace(req: Request, res: Response): Promise<void> {
         try {
             const { id } = req.params;
-            const data = req.body;
-            if (!id || isNaN(Number(id))) {
-                res.status(400).json({ error: 'ID do veículo inválido.' });
-            }
+            const { mileage_to_replace } = req.body;
 
-            if (!data.tire_id || isNaN(Number(data.tire_id))) {
-                res.status(400).json({ error: 'ID do pneu inválido.' });
-            }
-            await VehicleTiresService.removeTireToReplace(Number(id), data);
+            await VehicleTiresService.removeTireToReplace(Number(id), mileage_to_replace);
             res.status(200).json({ message: 'Pneu removido do veículo' });
         } catch (err: any) {
             res.status(500).json({ error: 'Erro ao remover pneu do veículo', details: err.message });

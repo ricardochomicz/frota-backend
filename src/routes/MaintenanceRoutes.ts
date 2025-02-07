@@ -32,4 +32,4 @@ router.put('/maintenances/:id/edit', authMiddleware, validate(maintenanceSchema)
 
 router.delete('/maintenances/:id/delete', authMiddleware, MaintenanceController.destroy);
 
-export default router;
+export default router; 

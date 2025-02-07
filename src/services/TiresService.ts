@@ -180,6 +180,21 @@ class TiresService extends BaseService {
         }
     }
 
+    static async updateStatusAfterAnalysis(tireId: number, status: string, replacement_reason: string): Promise<void> {
+
+        const query = `UPDATE tires SET status = ? WHERE id = ?`;
+        if (replacement_reason === 'defect') {
+            status = 'lower'
+        } else {
+            status = 'available'
+        }
+        try {
+            await db.promise().query(query, [status, tireId]);
+        } catch (error) {
+            console.error("[ERROR API] Erro ao atualizar status do pneu:", error);
+        }
+    }
+
     static async checkTireWear(wss: WebSocket.Server) {
         const query = `
             SELECT 

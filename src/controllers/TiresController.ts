@@ -121,6 +121,21 @@ class TiresController {
             res.status(500).json({ error: 'Erro ao deletar pneu', details: err.message });
         }
     }
+
+    static async updateStatusAfterAnalysis(req: Request, res: Response): Promise<void> {
+        try {
+            if (!req.user) {
+                res.status(401).json({ error: "Usuário não autenticado" });
+                return;
+            }
+            const { id } = req.params;
+            const { status, replacement_reason } = req.body;
+            await TiresService.updateStatusAfterAnalysis(Number(id), status, replacement_reason);
+            res.status(200).json({ message: 'Status do pneu atualizado com sucesso' });
+        } catch (err: any) {
+            res.status(500).json({ error: 'Erro ao atualizar status do pneu', details: err.message });
+        }
+    }
 }
 
 export default TiresController;

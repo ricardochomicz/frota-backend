@@ -6,13 +6,9 @@ class MaintenanceController {
 
     static async create(req: Request, res: Response): Promise<void> {
         try {
-            if (!req.user) {
-                res.status(401).json({ error: "Usuário não autenticado" });
-                return;
-            }
 
             const maintenance = maintenanceSchema.parse(req.body);
-            const result = await MaintenanceService.create(maintenance, req.user.userId);
+            const result = await MaintenanceService.create(maintenance, Number(req.user.userId));
 
             const maintenanceDetails = await MaintenanceService.getMaintenanceWithVehicle(result.id);
             res.status(201).json({ message: 'Manutenção cadastrada com sucesso', data: maintenanceDetails });

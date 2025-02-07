@@ -9,6 +9,10 @@ export const costAnalysisSchema = z.object({
         (val) => Number(val),
         z.number().min(1, { message: "O pneu é obrigatório e deve ser um número válido" })
     ),
+    vehicle_tire_id: z.preprocess(
+        (val) => Number(val),
+        z.number().min(1, { message: "Obrigatório" })
+    ),
     mileage_driven: z.preprocess(
         (val) => Number(val),
         z.number().min(0, { message: "KM rodados deve ser um número valido" })
