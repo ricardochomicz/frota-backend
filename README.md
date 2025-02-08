@@ -29,6 +29,24 @@ cd frota-backend
 npm install
 ```
 
+## 🔧 Configuraçã
+- Crie um arquivo `.env` com as seguintes variáveis:
+    - DB_USER=user
+    - DB_PASSWORD=password
+    - DB_NAME=frota_db
+    - PORT=5000
+    - NODE_ENV=development
+
+    (crie uma chave)
+    - JWT_SECRET=
+
+    (informe seus dados de SMTP no arquivo `.env`)
+    - SMTP_HOST=
+    - SMTP_PORT=
+    - SMTP_SECURE=false
+    - SMTP_USER=
+    - SMTP_PASS=
+
 ## 📚 Documentação da API
 ### Principais Endpoints
 - /auth - Rotas de autenticação
