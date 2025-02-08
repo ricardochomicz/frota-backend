@@ -91,6 +91,7 @@ docker-compose up -build
 ```
 
 # 📂 Estrutura do Projeto
+```bash
 .env
 .github/
     workflows/
@@ -128,3 +129,4 @@ src/
     tests/
     websocket.ts
 tsconfig.json
+```
