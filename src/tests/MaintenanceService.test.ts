@@ -265,7 +265,7 @@ describe("MaintenanceService", () => {
             // Verifica se a consulta UPDATE foi chamada com o status "concluída"
             expect(mockUpdateQuery).toHaveBeenCalledWith(
                 'UPDATE maintenance SET status = ? WHERE id = ?',
-                ['concluída', maintenanceId]
+                ['CONCLUIDA', maintenanceId]
             );
         });
 
@@ -291,7 +291,7 @@ describe("MaintenanceService", () => {
             // Verifica se a consulta UPDATE foi chamada com o status "pendente"
             expect(mockUpdateQuery).toHaveBeenCalledWith(
                 'UPDATE maintenance SET status = ? WHERE id = ?',
-                ['pendente', maintenanceId]
+                ['PENDENTE', maintenanceId]
             );
         });
 
