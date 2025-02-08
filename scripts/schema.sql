@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS tires (
   brand VARCHAR(255) NOT NULL,
   model VARCHAR(255) NOT NULL,
   price DECIMAL(10, 2) NOT NULL,
-  durability_mileage INT NOT NULL,
+  durability_km INT NOT NULL,
   status ENUM('available', 'in use', 'lower') NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -87,6 +87,7 @@ CREATE TABLE IF NOT EXISTS cost_analysis (
   cost DECIMAL(10, 2) NOT NULL,
   purchase_date DATE NOT NULL,
   performance_score INT NOT NULL,
+  replacement_reason VARCHAR(100) NULL,
   description TEXT NULL
   mileage_driven INT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
