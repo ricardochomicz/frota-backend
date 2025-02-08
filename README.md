@@ -29,45 +29,45 @@ cd frota-backend
 npm install
 ```
 
-📚 Documentação da API
-Principais Endpoints
-/auth - Rotas de autenticação
-/vehicles - Gerenciamento de veículos
-/tires - Controle de pneus
-/maintenance - Registros de manutenção
-/cost-analysis - Operações de análise de custos
+## 📚 Documentação da API
+### Principais Endpoints
+- /auth - Rotas de autenticação
+- /vehicles - Gerenciamento de veículos
+- /tires - Controle de pneus
+- /maintenance - Registros de manutenção
+- /cost-analysis - Operações de análise de custos
 
-# Exemplos de Uso
-## Autenticação
+## Exemplos de Uso
+### Autenticação
 - POST /auth/login - Realiza login de um usuário
 - POST /auth/register - Registra um novo usuário
 
-## Gerenciamento de Veículos
+### Gerenciamento de Veículos
 - GET /vehicles - Lista todos os veículos
 - POST /vehicles - Adiciona um novo veículo
 - PUT /vehicles/:id - Atualiza informações de um veículo
 - DELETE /vehicles/:id - Remove um veículo
 
-## Pneus
+### Pneus
 - GET /tires - Lista todos os pneus
 - POST /tires - Adiciona um novo pneu
 - PUT /tires/:id - Atualiza informações de um pneu
 - DELETE /tires/:id - Remove um pneu
 
-## Manutenções
+### Manutenções
 * GET /maintenance - Lista todos os registros de manutenção
 * POST /maintenance - Adiciona um novo registro de manutenção
 * PUT /maintenance/:id - Atualiza um registro de manutenção
 * DELETE /maintenance/:id - Remove um registro de manutenção
 
-## Análise de Custos
+### Análise de Custos
 * GET /cost-analysis - Lista todas as análises de custos
 * POST /cost-analysis - Cria uma nova análise de custos
 * PUT /cost-analysis/:id - Atualiza uma análise de custos
 * DELETE /cost-analysis/:id - Remove uma análise de custos
 
 
-# 📋Cobertura de Testes
+##  📋Cobertura de Testes
 * Serviço de Análise de Custos
 * Criação de análise de custos
 * Listagem com filtros
@@ -75,13 +75,13 @@ Principais Endpoints
 * Atualizações
 * Operações de exclusão
 
-# 🧪 Executando Testes
+## 🧪 Executando Testes
 Para executar os testes, utilize o comando:
 ```bash
 npx jest
 ```
 
-# 🐳 Utilizando Docker
+## 🐳 Utilizando Docker
 Para rodar o projeto utilizando Docker, siga os passos abaixo:
 
 Certifique-se de ter o Docker instalado em sua máquina.
@@ -90,7 +90,7 @@ Execute o comando:
 docker-compose up -build
 ```
 
-# 📂 Estrutura do Projeto
+## 📂 Estrutura do Projeto
 ```bash
 .env
 .github/
