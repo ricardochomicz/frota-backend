@@ -1,2 +1,71 @@
+# Arquivos de ambiente
 .env
+
+# Dependências do Node
 /node_modules
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Diretórios de build
+dist
+build
+
+# Cache do npm
+.npm
+
+# Cache do Yarn
+.yarn
+.pnp.*
+
+# Diretórios de teste
+coverage
+
+# Configurações do sistema operacional
+.DS_Store
+Thumbs.db
+
+# Configurações do editor
+.vscode
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Arquivos de lock
+package-lock.json
+yarn.lock
+
+# Arquivos de banco de dados
+*.sqlite
+*.db
+
+# Arquivos temporários
+tmp
+temp
+*.tmp
+*.temp
+
+# Arquivos de backup
+*.bak
+*.old
+*.orig
+*.save
+
+# Arquivos de compilação
+*.out
+*.o
+*.obj
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Arquivos de configuração do Docker
+docker-compose.override.yml
