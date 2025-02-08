@@ -36,6 +36,6 @@ router.delete('/vehicle-tires/:tire_id/delete', authMiddleware, VehicleTiresCont
  * @route PUT /vehicle-tires/:id/replace-tire
  * 
  */
-router.put('/vehicle-tires/:id/remove-to-replace', authMiddleware, VehicleTiresController.removeTireToReplace);
+router.put('/vehicle-tires/:id/remove-to-replace', authMiddleware, VehicleTiresController.markTireForReplacement);
 
 export default router;

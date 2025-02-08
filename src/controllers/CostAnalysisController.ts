@@ -55,6 +55,7 @@ class CostAnalysisController {
         }
     }
 
+
     static async update(req: Request, res: Response) {
         try {
             if (!req.user) {
@@ -72,6 +73,7 @@ class CostAnalysisController {
             res.status(500).json({ error: 'Erro ao atualizar análise de custo', details: err.message });
         }
     }
+
 
     static async destroy(req: Request, res: Response) {
         try {

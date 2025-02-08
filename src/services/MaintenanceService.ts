@@ -260,9 +260,9 @@ class MaintenanceService extends BaseService {
             const [result]: any = await db.promise().query(query, [maintenanceId]);
             const { pending_tires, replaced_tires, total_tires } = result[0];
 
-            let newStatus = "pendente";
+            let newStatus = "PENDENTE";
             if (replaced_tires === total_tires && total_tires > 0) {
-                newStatus = "concluída";
+                newStatus = "CONCLUIDA";
             }
 
             await db.promise().query(updateQuery, [newStatus, maintenanceId]);

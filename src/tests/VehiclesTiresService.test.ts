@@ -240,7 +240,7 @@ describe("VehicleTiresService", () => {
         });
     });
 
-    describe("removeTireToReplace", () => {
+    describe("markTireForReplacement", () => {
         it("deve marcar o pneu para substituição e atualizar a manutenção", async () => {
             const mockTire = {
                 mileage_to_replace: 15000,
@@ -260,7 +260,7 @@ describe("VehicleTiresService", () => {
             // Mock da atualização de manutenção
             (MaintenanceService.updateMaintenanceStatus as jest.Mock).mockResolvedValueOnce({});
 
-            await VehicleTiresService.removeTireToReplace(1, mockTire as IVehicleTires);
+            await VehicleTiresService.markTireForReplacement(1, mockTire as IVehicleTires);
 
             // Verifica se a query de busca foi chamada
             expect(db.promise().query).toHaveBeenCalledWith(
@@ -289,7 +289,7 @@ describe("VehicleTiresService", () => {
             (db.promise().query as jest.Mock).mockResolvedValueOnce([[], null]);
 
             await expect(
-                VehicleTiresService.removeTireToReplace(1, mockTire as IVehicleTires)
+                VehicleTiresService.markTireForReplacement(1, mockTire as IVehicleTires)
             ).rejects.toThrow("Erro ao atualizar pneu. Tente novamente mais tarde.");
         });
 
@@ -310,7 +310,7 @@ describe("VehicleTiresService", () => {
             );
 
             await expect(
-                VehicleTiresService.removeTireToReplace(1, mockTire as IVehicleTires)
+                VehicleTiresService.markTireForReplacement(1, mockTire as IVehicleTires)
             ).rejects.toThrow("Erro ao atualizar pneu. Tente novamente mais tarde.");
         });
     });

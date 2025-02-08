@@ -59,15 +59,15 @@ class VehicleTiresController {
         }
     }
 
-    static async removeTireToReplace(req: Request, res: Response): Promise<void> {
+    static async markTireForReplacement(req: Request, res: Response): Promise<void> {
         try {
             const { id } = req.params;
             const { mileage_to_replace } = req.body;
 
-            await VehicleTiresService.removeTireToReplace(Number(id), mileage_to_replace);
-            res.status(200).json({ message: 'Pneu removido do veículo' });
+            await VehicleTiresService.markTireForReplacement(Number(id), mileage_to_replace);
+            res.status(200).json({ message: 'Pneu marcado para substituição com sucesso' });
         } catch (err: any) {
-            res.status(500).json({ error: 'Erro ao remover pneu do veículo', details: err.message });
+            res.status(500).json({ error: 'Erro ao marcar pneu do veículo', details: err.message });
         }
     }
 

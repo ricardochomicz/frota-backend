@@ -142,7 +142,7 @@ class VehicleTiresService {
     //     }
     // }
 
-    static async removeTireToReplace(id: number, data: IVehicleTires): Promise<void> {
+    static async markTireForReplacement(id: number, data: IVehicleTires): Promise<void> {
         const { mileage_to_replace } = data;
 
         const getMaintenanceQuery = `SELECT maintenance_id FROM vehicle_tires WHERE id = ?`;
