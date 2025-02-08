@@ -34,6 +34,6 @@ router.put('/cost-analysis/:id', authMiddleware, validate(costAnalysisSchema), C
  * @route DELETE /cost-analysis/:id
  * @description Exclui uma analise de custo pelo ID
  */
-router.delete('/cost-analysis/:id', authMiddleware, CostAnalysisController.delete);
+router.delete('/cost-analysis/:id', authMiddleware, CostAnalysisController.destroy);
 
 export default router;

@@ -7,6 +7,12 @@ const PAGE = 1;
 const LIMIT = 10;
 class CostAnalysisService extends BaseService {
 
+    /**
+     * 
+     * @param costAnalysis 
+     * @param userId 
+     * Cria uma nova analise de custo
+     */
     static async create(costAnalysis: ICostAnalysis, userId?: number): Promise<{ data: ICostAnalysis }> {
         try {
             const { vehicle_id, item_type, cost, purchase_date, performance_score, description, replacement_reason, tire_id, mileage_driven, vehicle_tire_id } = costAnalysis;
@@ -15,11 +21,20 @@ class CostAnalysisService extends BaseService {
             const [result]: any = await db.promise().query(query, [vehicle_id, item_type, cost, dateFormat, performance_score, description, replacement_reason, tire_id, mileage_driven, vehicle_tire_id, userId]);
             return result;
         } catch (error) {
-            console.error("[ERROR API] Erro ao criar analise de custo:", error);
             throw new Error('Erro na requisição. Tente novamente mais tarde.');
         }
     }
 
+    /**
+     * 
+     * @param page 
+     * @param limit 
+     * @param filters 
+     * @param userId 
+     * Na tabela users tem o campo manager_id que identifica quem o gerencia
+     * manager_id pode ver os seus registros e também os seus subordinados
+     * Usuários que não tem manager_id são gerentes
+     */
     static async getAll(
         page = PAGE,
         limit = LIMIT,
@@ -65,11 +80,15 @@ class CostAnalysisService extends BaseService {
             const [rows]: any = await db.promise().query(query, queryParams);
             return { analysis: rows, total };
         } catch (error) {
-            console.error('[ERROR API] Erro ao buscar análises:', error);
             throw new Error('Erro ao buscar análises. Tente novamente mais tarde.');
         }
     }
 
+    /**
+     * 
+     * @param id 
+     * retornar uma análise de custo
+     */
     static async get(id: number): Promise<ICostAnalysis | null> {
         const query = `SELECT * FROM cost_analysis WHERE id = ?`;
         try {
@@ -80,6 +99,14 @@ class CostAnalysisService extends BaseService {
         }
     }
 
+
+    /**
+     * 
+     * @param id 
+     * @param costAnalysis 
+     * @param user_id 
+     * Atualiza uma análise de custo
+     */
     static async update(id: number, costAnalysis: ICostAnalysis, user_id: number) {
         const { vehicle_id, item_type, cost, purchase_date, performance_score } = costAnalysis;
         const query = `UPDATE cost_analysis SET vehicle_id = ?, user_id = ?, item_type = ?, cost = ?, purchase_date = ?, performance_score = ? WHERE id = ?`;
@@ -90,13 +117,17 @@ class CostAnalysisService extends BaseService {
         }
     }
 
-    static async delete(id: number): Promise<void> {
-        const query = `DELETE FROM cost_analysis WHERE id = ?`;
-
+    /**
+     * 
+     * @param id 
+     * deleta uma análise de custo
+     */
+    static async destroy(id: number) {
         try {
+            const query = `DELETE FROM cost_analysis WHERE id = ?`;
             await db.promise().query(query, [id]);
         } catch (error) {
-            throw new Error('Erro ao deletar veículo. Tente novamente mais tarde.');
+            throw new Error('Erro ao deletar análise. Tente novamente mais tarde.');
         }
     }
 }

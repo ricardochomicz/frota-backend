@@ -69,7 +69,7 @@ class UserController {
                 return;
             }
 
-            await UserService.update(Number(id), { name, email, role }, req.user.userId);
+            await UserService.update(Number(id), { name, email, role });
             res.status(200).json({ message: 'Usuário atualizado com sucesso' });
         } catch (err: any) {
             res.status(500).json({ error: 'Erro ao atualizar usuário', details: err.message });

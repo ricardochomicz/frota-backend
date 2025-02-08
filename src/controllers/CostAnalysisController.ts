@@ -73,10 +73,10 @@ class CostAnalysisController {
         }
     }
 
-    static async delete(req: Request, res: Response) {
+    static async destroy(req: Request, res: Response) {
         try {
             const { id } = req.params;
-            await CostAnalysisService.delete(Number(id));
+            await CostAnalysisService.destroy(Number(id));
             res.status(200).json({ message: 'Análise de custo excluida com sucesso' });
         } catch (err: any) {
             res.status(500).json({ error: 'Erro ao excluir análise de custo', details: err.message });
