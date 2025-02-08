@@ -12,11 +12,13 @@ const router = express.Router();
  */
 router.post('/maintenances', authMiddleware, MaintenanceController.create);
 
+
 /**
  * @route GET /maintenances
  * @description Retorna a lista de manutenções cadastradas
  */
 router.get('/maintenances', authMiddleware, MaintenanceController.getAll);
+
 
 /**
  * @route GET /maintenances/:id
@@ -24,12 +26,18 @@ router.get('/maintenances', authMiddleware, MaintenanceController.getAll);
  */
 router.get('/maintenances/:id', authMiddleware, MaintenanceController.get);
 
+
 /**
  * @route PUT /maintenances/:id
  * @description Atualiza uma manutenção pelo ID
  */
 router.put('/maintenances/:id/edit', authMiddleware, validate(maintenanceSchema), MaintenanceController.update);
 
+
+/**
+ * @route DELETE /maintenances/:id/delete
+ * @description Deleta uma manutenção pelo ID
+ */
 router.delete('/maintenances/:id/delete', authMiddleware, MaintenanceController.destroy);
 
 export default router; 

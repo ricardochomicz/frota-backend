@@ -1,17 +1,12 @@
 import { z } from "zod";
 
 export const tiresSchema = z.object({
-    code: z.string().min(1, { message: "O código do pneu é obrigatório" }),
-    model: z.string().min(1, { message: "O modelo do pneu é obrigatório" }),
-    brand: z.string().min(1, { message: "A marca do pneu é obrigatória" }),
-    status: z.string().min(1, { message: "O status do pneu é obrigatório" }),
+    code: z.string({ message: "O código do pneu é obrigatório" }).min(3, { message: "Minímo de 3 caracteres" }),
+    model: z.string({ message: "O modelo do pneu é obrigatório" }).min(3, { message: "Minímo de 3 caracteres" }),
+    brand: z.string({ message: "A marca do pneu é obrigatória" }).min(3, { message: "Minímo de 3 caracteres" }),
+    status: z.enum(["available", "in use", "lower"], { message: "Status inválido" }),
     price: z
-        .string({ message: "O preço do pneu é obrigatório" }),
-    durability_km: z.number({ message: "A durabilidade do pneu é obrigatória" })
-    //.positive({ message: "O preço deve ser maior que zero" })
-    //.refine((value) => {
-    // Verifica se o número tem até 10 dígitos no total e 2 casas decimais
-    //const regex = /^\d{1,8}(\.\d{1,2})?$/;
-    //return regex.test(String(value));
-    //}, { message: "O preço deve ter até 10 dígitos no total e 2 casas decimais" }),
+        .string()
+        .regex(/^\d+(\.\d{1,2})?$/, { message: "Preço inválido. Use um formato numérico, ex: 1000 ou 1000.50" }),
+    durability_km: z.number({ message: "A durabilidade deve ser um número positivo" })
 });

@@ -12,11 +12,13 @@ const router = express.Router();
  */
 router.post('/vehicles', authMiddleware, validate(vehicleSchema), VehicleController.create);
 
+
 /**
  * @route GET /vehicles
  * @description Retorna a lista de veículos cadastrados
  */
 router.get('/vehicles', authMiddleware, VehicleController.getAll);
+
 
 /**
  * @route GET /vehicles/:id
@@ -24,17 +26,21 @@ router.get('/vehicles', authMiddleware, VehicleController.getAll);
  */
 router.get('/vehicles/:id', authMiddleware, VehicleController.get);
 
+
 /**
  * @route GET /vehicles/license_plate/:license_plate
  * @description Busca um veículo pelo número da placa
  */
 router.get('/vehicles/license_plate/:license_plate', authMiddleware, VehicleController.getByLicensePlate);
 
+
 /**
  * @route GET /vehicles/alls
  * @description Busca todos os veículos cadastrados
  */
 router.get('/to-select', authMiddleware, VehicleController.getAllVehiclesToSelect);
+
+
 /**
  * @route PUT /vehicles/:id
  * @description Atualiza um veículo pelo ID
@@ -42,6 +48,10 @@ router.get('/to-select', authMiddleware, VehicleController.getAllVehiclesToSelec
 router.put('/vehicles/:id/edit', authMiddleware, validate(vehicleSchema), VehicleController.update);
 
 
+/**
+ * @route PUT /vehicles/mileage
+ * @description Atualiza a kilometragem de um veículo
+ */
 router.put('/vehicles/mileage', authMiddleware, VehicleController.updateMileage);
 
 

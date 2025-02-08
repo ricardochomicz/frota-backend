@@ -1,5 +1,4 @@
 
-
 interface IVehicle {
     id?: number;
     brand: string;
