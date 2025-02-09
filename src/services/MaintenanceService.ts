@@ -229,7 +229,6 @@ class MaintenanceService extends BaseService {
      */
     static async destroy(id: number) {
         const query = `DELETE FROM maintenance WHERE id = ?`;
-
         try {
             await db.promise().query(query, [id]);
         } catch (error) {

@@ -86,7 +86,9 @@ class VehicleTiresService {
 
         try {
             const [rows]: any = await db.promise().query(query, [vehicle_id, maintenance_id]);
+            console.error(rows)
             return rows;
+
         } catch (error) {
             throw new Error('Erro ao buscar pneu. Tente novamente mais tarde.');
         }
