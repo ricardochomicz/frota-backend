@@ -18,9 +18,9 @@ describe("CostAnalysisService", () => {
             const mockCostAnalysis: ICostAnalysis = {
                 vehicle_id: 1,
                 item_type: "tire",
-                cost: 1000,
+                cost: "1000",
                 purchase_date: new Date("2025-02-08"),
-                performance_score: 5,
+                performance_score: "5",
                 description: "Test description",
                 replacement_reason: "wear",
                 tire_id: 1,
@@ -41,9 +41,9 @@ describe("CostAnalysisService", () => {
                 [
                     1,
                     "tire",
-                    1000,
+                    "1000",
                     expect.anything(), // Ignora o valor da data
-                    5,
+                    "5",
                     "Test description",
                     "wear",
                     1,
@@ -61,9 +61,9 @@ describe("CostAnalysisService", () => {
             const mockCostAnalysis: ICostAnalysis = {
                 vehicle_id: 1,
                 item_type: "tire",
-                cost: 1000,
+                cost: "1000",
                 purchase_date: new Date('2025-02-08'),
-                performance_score: 5,
+                performance_score: "5",
                 description: "Test description",
                 replacement_reason: "wear",
                 tire_id: 1,
@@ -75,7 +75,7 @@ describe("CostAnalysisService", () => {
 
             // Mock da query de inserção com erro
             (db.promise().query as jest.Mock).mockRejectedValueOnce(
-                new Error("Erro no banco de dados")
+                new Error("Erro na requisição. Tente novamente mais tarde.")
             );
 
             await expect(
@@ -257,9 +257,9 @@ describe("CostAnalysisService", () => {
             const mockAnalysis: ICostAnalysis = {
                 vehicle_id: 1,
                 item_type: "tire",
-                cost: 1000,
+                cost: "1000",
                 purchase_date: new Date("2025-02-08"),
-                performance_score: 5,
+                performance_score: "5",
             };
 
             const userId = 1;
@@ -272,7 +272,7 @@ describe("CostAnalysisService", () => {
             // Verifica se a query foi chamada corretamente
             expect(db.promise().query).toHaveBeenCalledWith(
                 "UPDATE cost_analysis SET vehicle_id = ?, user_id = ?, item_type = ?, cost = ?, purchase_date = ?, performance_score = ? WHERE id = ?",
-                [1, 1, "tire", 1000, new Date("2025-02-08"), 5, 1]
+                [1, 1, "tire", "1000", new Date("2025-02-08"), "5", 1]
             );
         });
 
@@ -280,9 +280,9 @@ describe("CostAnalysisService", () => {
             const mockAnalysis: ICostAnalysis = {
                 vehicle_id: 1,
                 item_type: "tire",
-                cost: 1000,
+                cost: "1000",
                 purchase_date: new Date('2023-10-01'),
-                performance_score: 5,
+                performance_score: "5",
             };
 
             const userId = 1;

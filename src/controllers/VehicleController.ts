@@ -144,6 +144,20 @@ class VehicleController {
             res.status(500).json({ error: 'Erro ao excluir veículo', details: err.message });
         }
     }
+
+    static async getVehicleMaintenancesAndTires(req: Request, res: Response): Promise<void> {
+        try {
+            const { id } = req.params;  // ID do veículo a ser buscado
+            const vehicle = await VehicleService.getVehicleMaintenancesAndTires(Number(id));  // Busca o veículo no banco de dados
+            if (!vehicle) {
+                res.status(404).json({ error: 'Veículo não encontrado' });
+                return;
+            }
+            res.status(200).json({ message: 'Veículo encontrado', data: vehicle });
+        } catch (err: any) {
+            res.status(500).json({ error: 'Erro ao buscar veículo', details: err.message });
+        }
+    }
 }
 
 export default VehicleController;

@@ -40,6 +40,11 @@ router.get('/vehicles/license_plate/:license_plate', authMiddleware, VehicleCont
  */
 router.get('/to-select', authMiddleware, VehicleController.getAllVehiclesToSelect);
 
+/**
+ * @route GET /vehicles/vehicle-maintenances-tires/:id
+ * @description Exibe as manutenções e pneus de um veículo
+ */
+router.get('/vehicles/vehicle-maintenances-tires/:id', authMiddleware, VehicleController.getVehicleMaintenancesAndTires);
 
 /**
  * @route PUT /vehicles/:id

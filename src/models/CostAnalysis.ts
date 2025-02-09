@@ -5,9 +5,9 @@ interface ICostAnalysis {
     vehicle_tire_id?: number;
     tire_id?: number;
     item_type: string;
-    cost: number;
-    purchase_date?: Date;
-    performance_score: number;
+    cost?: number;
+    purchase_date?: string | Date;
+    performance_score?: number;
     description?: string;
     replacement_reason?: string;
     mileage_driven?: number;

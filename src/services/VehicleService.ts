@@ -153,6 +153,42 @@ class VehicleService extends BaseService {
         }
     }
 
+    static async getVehicleMaintenancesAndTires(vehicleId: number) {
+        const query = `
+            SELECT 
+                v.id AS vehicle_id,
+                v.license_plate,
+                vt.id AS tire_id,
+                vt.mileage_at_installation AS km_at_installation,
+                vt.predicted_replacement_mileage,
+                vt.installation_date,
+                t.brand AS tire_brand,
+                t.model AS tire_model,
+                t.code AS tire_code,
+                m.id AS maintenance_id,
+                m.mileage_at_maintenance,
+                m.created_at,
+                m.description AS maintenance_description
+            FROM 
+                vehicles v
+            LEFT JOIN vehicle_tires vt ON vt.vehicle_id = v.id
+            LEFT JOIN tires t ON vt.tire_id = t.id
+            LEFT JOIN maintenance m ON m.vehicle_id = v.id
+            WHERE 
+                v.id = ?
+            ORDER BY 
+                m.created_at DESC;
+        `;
+
+        try {
+            const [rows] = await db.promise().query(query, [vehicleId]);
+            return rows;
+        } catch (error) {
+            console.error("Erro ao buscar manutenções e pneus:", error);
+            throw error;
+        }
+    }
+
 
 }
 

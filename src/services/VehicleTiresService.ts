@@ -86,7 +86,6 @@ class VehicleTiresService {
 
         try {
             const [rows]: any = await db.promise().query(query, [vehicle_id, maintenance_id]);
-            console.error(rows)
             return rows;
 
         } catch (error) {
