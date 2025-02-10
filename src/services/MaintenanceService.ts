@@ -32,11 +32,17 @@ class MaintenanceService extends BaseService {
                 u.id AS user_id, u.name AS user_name, u.email AS user_email,
                 COUNT(vt.id) AS total_tires, 
                 SUM(CASE 
-                        WHEN v.mileage >= (vt.mileage_at_installation + vt.predicted_replacement_mileage) 
-                        AND vt.to_replace = 0 
-                        THEN 1 
-                        ELSE 0 
-                    END) AS tires_pending
+                    WHEN v.mileage >= (vt.mileage_at_installation + vt.predicted_replacement_mileage)
+                    AND vt.to_replace = 0 
+                    THEN 1 
+                    ELSE 
+                        CASE 
+                            WHEN v.mileage >= vt.mileage_at_installation + (0.8 * vt.predicted_replacement_mileage)
+                            AND vt.to_replace = 0 
+                            THEN 1
+                            ELSE 0
+                        END
+                END) AS tires_pending
             FROM maintenance m 
             JOIN vehicles v ON m.vehicle_id = v.id
             LEFT JOIN users u ON u.id = m.user_id

@@ -209,7 +209,14 @@ class TiresService extends BaseService {
                 v.license_plate, 
                 v.mileage AS current_mileage,
                 u.email,
-                t.code
+                t.code,
+                CASE 
+                    WHEN v.mileage >= (vt.mileage_at_installation + vt.predicted_replacement_mileage) 
+                    THEN 'tire_replacement'
+                    WHEN v.mileage >= (vt.mileage_at_installation + (0.8 * vt.predicted_replacement_mileage)) 
+                    THEN 'tire_warning'
+                    ELSE 'ok'
+                END AS tire_status
             FROM 
                 vehicle_tires vt
             JOIN 
@@ -224,8 +231,8 @@ class TiresService extends BaseService {
                 GROUP BY vehicle_id) m 
             ON vt.vehicle_id = m.vehicle_id
             WHERE 
-                vt.to_replace = 0 
-        `;
+                vt.to_replace = 0;
+            `;
 
         try {
             console.error('Iniciando verificação de pneus...');
@@ -233,10 +240,12 @@ class TiresService extends BaseService {
 
             if (Array.isArray(rows) && rows.length > 0) {
                 rows.forEach(async (tire) => {
-                    const isNearReplacement = tire.current_mileage >= tire.mileage_at_installation + (0.8 * tire.predicted_replacement_mileage)
-                        && tire.current_mileage < tire.mileage_at_installation + tire.predicted_replacement_mileage;
-                    const isDueForReplacement = tire.current_mileage >= tire.mileage_at_installation + tire.predicted_replacement_mileage;
-
+                    const isNearReplacement = tire.tire_status === 'tire_replacement';
+                    const isDueForReplacement = tire.tire_status === 'tire_warning';
+                    // const isNearReplacement = tire.current_mileage >= tire.mileage_at_installation + (0.8 * tire.predicted_replacement_mileage)
+                    //     && tire.current_mileage < tire.mileage_at_installation + tire.predicted_replacement_mileage;
+                    // const isDueForReplacement = tire.current_mileage >= tire.mileage_at_installation + tire.predicted_replacement_mileage;
+                    console.error(tire.tire_status)
                     if (!tire.email || !tire.license_plate) {
                         console.error('Dados incompletos para o pneu:', tire);
                         return;
