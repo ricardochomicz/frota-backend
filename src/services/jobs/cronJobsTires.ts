@@ -9,7 +9,7 @@ import TiresService from '../TiresService';
 const wss = new WebSocket.Server({ port: 8080 }); // Ajuste a porta se necessário
 
 // Agendar a função para rodar a cada 1 hora
-cron.schedule('0 * * * *', async () => {
+cron.schedule('* * * * *', async () => {
     console.log('⏳ Rodando a verificação de pneus...');
     await TiresService.checkTireWear(wss);
 });

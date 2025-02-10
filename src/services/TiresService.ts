@@ -225,7 +225,6 @@ class TiresService extends BaseService {
             ON vt.vehicle_id = m.vehicle_id
             WHERE 
                 vt.to_replace = 0 
-                AND v.mileage >= vt.mileage_at_installation + vt.predicted_replacement_mileage;
         `;
 
         try {
@@ -233,30 +232,53 @@ class TiresService extends BaseService {
             const [rows] = await db.promise().query<TireCheckResult[]>(query);
 
             if (Array.isArray(rows) && rows.length > 0) {
-                console.error(`🔴 ${rows.length} pneus precisam de troca.`);
                 rows.forEach(async (tire) => {
+                    const isNearReplacement = tire.current_mileage >= tire.mileage_at_installation + (0.8 * tire.predicted_replacement_mileage)
+                        && tire.current_mileage < tire.mileage_at_installation + tire.predicted_replacement_mileage;
+                    const isDueForReplacement = tire.current_mileage >= tire.mileage_at_installation + tire.predicted_replacement_mileage;
 
-                    wss.clients.forEach((client) => {
-                        if (client.readyState === WebSocket.OPEN) {
-                            client.send(JSON.stringify({
-                                type: 'tire_replacement',
-                                message: `Pneu do veículo ${tire.license_plate} precisa ser trocado!`,
-                                data: tire
-                            }));
-                        }
-                    });
                     if (!tire.email || !tire.license_plate) {
                         console.error('Dados incompletos para o pneu:', tire);
                         return;
                     }
+
+
+                    // Enviar a mensagem para os clientes do WebSocket
+                    wss.clients.forEach((client) => {
+                        if (client.readyState === WebSocket.OPEN) {
+                            if (isNearReplacement) {
+                                console.log(`Enviando notificação de 80% para o veículo ${tire.license_plate}`);
+                                client.send(JSON.stringify({
+                                    type: 'tire_warning',
+                                    message: `O pneu do veículo ${tire.license_plate} está próximo da troca. A quilometragem atingiu 80%.`,
+                                    data: tire
+                                }));
+                            } else if (isDueForReplacement) {
+                                console.log(`Enviando notificação de troca para o veículo ${tire.license_plate}`);
+                                client.send(JSON.stringify({
+                                    type: 'tire_replacement',
+                                    message: `Pneu do veículo ${tire.license_plate} precisa ser trocado!`,
+                                    data: tire
+                                }));
+                            }
+                        } else {
+                            console.log(`Cliente WebSocket não está aberto para o veículo ${tire.license_plate}`);
+                        }
+                    });
+
+                    // Notificar por e-mail
                     console.log(`🔴 O pneu ${tire.code} do veículo ${tire.license_plate} precisa ser trocado!`);
                     try {
+                        const subject = isDueForReplacement ? 'Troca de Pneus Necessária' : 'Aviso de Aproximação para Troca de Pneus';
+                        const message = isDueForReplacement
+                            ? `O pneu ${tire.code} do veículo ${tire.license_plate} atingiu a quilometragem de substituição. Agende a troca o quanto antes.`
+                            : `O pneu ${tire.code} do veículo ${tire.license_plate} atingiu 80% da quilometragem de substituição. Agende a troca em breve.`;
 
                         // Enviar notificação ao usuário responsável
                         await NotificationService.sendEmail({
                             to: tire.email,
-                            subject: 'Troca de Pneus Necessária',
-                            message: `O pneu ${tire.code} do veículo ${tire.license_plate} atingiu a quilometragem de substituição. Agende a troca o quanto antes.`,
+                            subject: subject,
+                            message: message,
                         });
                         console.log(`✅ Notificação enviada para ${tire.email}`);
                     } catch (error) {
@@ -265,12 +287,19 @@ class TiresService extends BaseService {
                 });
             } else {
                 console.log('✅ Nenhum pneu precisa de troca agora.');
+                wss.clients.forEach((client) => {
+                    if (client.readyState === WebSocket.OPEN) {
+                        client.send(JSON.stringify({
+                            type: "info",
+                            message: "Nenhum pneu precisa ser trocado no momento.",
+                        }));
+                    }
+                });
             }
         } catch (error) {
             console.error('Erro ao verificar pneus:', error);
         }
     }
-
 }
 
 export default TiresService;

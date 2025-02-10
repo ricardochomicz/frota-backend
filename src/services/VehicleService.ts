@@ -173,9 +173,9 @@ class VehicleService extends BaseService {
                 vehicles v
             LEFT JOIN vehicle_tires vt ON vt.vehicle_id = v.id
             LEFT JOIN tires t ON vt.tire_id = t.id
-            LEFT JOIN maintenance m ON m.vehicle_id = v.id
+            LEFT JOIN maintenance m ON m.vehicle_id = v.id AND m.id = vt.maintenance_id
             WHERE 
-                v.id = ?
+                v.id = ? 
             ORDER BY 
                 m.created_at DESC;
         `;

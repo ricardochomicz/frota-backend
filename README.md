@@ -29,7 +29,7 @@ cd frota-backend
 npm install
 ```
 
-## 🔧 Configuraçã
+## 🔧 Configuração
 - Crie um arquivo `.env` com as seguintes variáveis:
     - DB_USER=user
     - DB_PASSWORD=password

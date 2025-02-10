@@ -355,15 +355,66 @@ describe('TiresService', () => {
             wss.close();
         });
 
-        it('deve enviar notificações quando há pneus para troca', async () => {
+        it('deve enviar uma mensagem de "tire_warning" quando o desgaste atingir 80%', async () => {
+            const mockRows = [
+                {
+                    current_mileage: 18000,
+                    mileage_at_installation: 10000,
+                    predicted_replacement_mileage: 10000,
+                    license_plate: 'ABC-1234',
+                    email: 'user@example.com',
+                    code: 'P001',
+                    to_replace: 0,
+                    tw: true, // Habilita o envio de "tire_warning"
+                    tr: false, // Desabilita o envio de "tire_replacement"
+                },
+            ];
+
+            (db.promise().query as jest.Mock).mockResolvedValueOnce([mockRows, null]);
+
+            const sendEmailMock = jest.spyOn(NotificationService, 'sendEmail').mockResolvedValueOnce(undefined);
+
+            // Executa o método
+            await TiresService.checkTireWear(wss);
+
+            // Verifica se a query foi chamada
+            expect(db.promise().query).toHaveBeenCalled();
+
+            const mockClient = Array.from(wss.clients)[0] as any;
+            expect(mockClient.send).toHaveBeenCalledWith(
+                JSON.stringify({
+                    type: 'tire_warning',
+                    message: 'O pneu do veículo ABC-1234 está próximo da troca. A quilometragem atingiu 80%.',
+                    data: mockRows[0],
+                })
+            );
+
+            await expect(NotificationService.sendEmail).toHaveBeenCalledWith({
+                to: 'user@example.com',
+                subject: 'Aviso de Aproximação para Troca de Pneus',
+                message: 'O pneu P001 do veículo ABC-1234 atingiu 80% da quilometragem de substituição. Agende a troca em breve.',
+            });
+
+            // Verifica os logs
+            expect(console.error).toHaveBeenCalledWith('Iniciando verificação de pneus...');
+            expect(console.log).toHaveBeenCalledWith('🔴 O pneu P001 do veículo ABC-1234 precisa ser trocado!');
+            expect(console.log).toHaveBeenCalledWith('✅ Notificação enviada para user@example.com');
+        })
+
+        it('deve enviar uma mensagem de "tire_replacement" quando o desgaste atingir 100%', async () => {
             // Mock da query do banco de dados
             const mockRows = [
                 {
                     id: 1,
                     license_plate: 'ABC-1234',
-                    current_mileage: 50000,
+                    current_mileage: 20000, // Desgaste de 100%
+                    mileage_at_installation: 10000,
+                    predicted_replacement_mileage: 10000,
                     email: 'user@example.com',
                     code: 'P001',
+                    to_replace: 0,
+                    tw: false, // Desabilita o envio de "tire_warning"
+                    tr: true, // Habilita o envio de "tire_replacement"
                 },
             ];
             (db.promise().query as jest.Mock).mockResolvedValueOnce([mockRows, null]);
@@ -397,17 +448,24 @@ describe('TiresService', () => {
 
             // Verifica os logs
             expect(console.error).toHaveBeenCalledWith('Iniciando verificação de pneus...');
-            expect(console.error).toHaveBeenCalledWith('🔴 1 pneus precisam de troca.');
             expect(console.log).toHaveBeenCalledWith('🔴 O pneu P001 do veículo ABC-1234 precisa ser trocado!');
             expect(console.log).toHaveBeenCalledWith('✅ Notificação enviada para user@example.com');
         });
 
-        it('deve logar que nenhum pneu precisa de troca', async () => {
+        it('deve enviar uma mensagem de "info" quando nenhum pneu precisar de troca', async () => {
             // Mock da query do banco de dados (sem resultados)
             (db.promise().query as jest.Mock).mockResolvedValueOnce([[], null]);
 
             // Executa o método
             await TiresService.checkTireWear(wss);
+            const mockClient = Array.from(wss.clients)[0] as any;
+
+            expect(mockClient.send).toHaveBeenCalledWith(
+                JSON.stringify({
+                    type: 'info',
+                    message: 'Nenhum pneu precisa ser trocado no momento.',
+                })
+            );
 
             // Verifica se a query foi chamada
             expect(db.promise().query).toHaveBeenCalled();

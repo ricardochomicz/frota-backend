@@ -8,7 +8,7 @@ export const setupWebSocket = (server: http.Server) => {
         console.log('Novo cliente conectado!');
 
         // Enviar uma mensagem para o cliente assim que ele se conectar
-        ws.send(JSON.stringify({ type: "tire_replacement", message: "Conexão estabelecida com sucesso!" }));
+        ws.send(JSON.stringify({ type: "connection_success", message: "Conexão estabelecida com sucesso!" }));
 
         // Quando o servidor recebe uma mensagem do cliente
         ws.on('message', (message) => {
