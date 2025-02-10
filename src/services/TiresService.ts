@@ -240,17 +240,13 @@ class TiresService extends BaseService {
 
             if (Array.isArray(rows) && rows.length > 0) {
                 rows.forEach(async (tire) => {
-                    const isNearReplacement = tire.tire_status === 'tire_replacement';
-                    const isDueForReplacement = tire.tire_status === 'tire_warning';
-                    // const isNearReplacement = tire.current_mileage >= tire.mileage_at_installation + (0.8 * tire.predicted_replacement_mileage)
-                    //     && tire.current_mileage < tire.mileage_at_installation + tire.predicted_replacement_mileage;
-                    // const isDueForReplacement = tire.current_mileage >= tire.mileage_at_installation + tire.predicted_replacement_mileage;
-                    console.error(tire.tire_status)
+                    const isNearReplacement = tire.tire_status === 'tire_warning';
+                    const isDueForReplacement = tire.tire_status === 'tire_replacement';
+
                     if (!tire.email || !tire.license_plate) {
                         console.error('Dados incompletos para o pneu:', tire);
                         return;
                     }
-
 
                     // Enviar a mensagem para os clientes do WebSocket
                     wss.clients.forEach((client) => {

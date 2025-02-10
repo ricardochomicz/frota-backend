@@ -365,8 +365,8 @@ describe('TiresService', () => {
                     email: 'user@example.com',
                     code: 'P001',
                     to_replace: 0,
-                    tw: true, // Habilita o envio de "tire_warning"
-                    tr: false, // Desabilita o envio de "tire_replacement"
+                    tire_status: 'tire_warning', // Habilita o envio de "tire_warning"
+
                 },
             ];
 
@@ -413,8 +413,7 @@ describe('TiresService', () => {
                     email: 'user@example.com',
                     code: 'P001',
                     to_replace: 0,
-                    tw: false, // Desabilita o envio de "tire_warning"
-                    tr: true, // Habilita o envio de "tire_replacement"
+                    tire_status: 'tire_replacement',
                 },
             ];
             (db.promise().query as jest.Mock).mockResolvedValueOnce([mockRows, null]);
