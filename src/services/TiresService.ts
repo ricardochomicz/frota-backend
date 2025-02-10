@@ -1,3 +1,4 @@
+
 import db from '../config/db';
 import { ITires, TireCheckResult } from "../models/Tires";
 import BaseService from './BaseService';
@@ -234,6 +235,7 @@ class TiresService extends BaseService {
             if (Array.isArray(rows) && rows.length > 0) {
                 console.error(`🔴 ${rows.length} pneus precisam de troca.`);
                 rows.forEach(async (tire) => {
+
                     wss.clients.forEach((client) => {
                         if (client.readyState === WebSocket.OPEN) {
                             client.send(JSON.stringify({
