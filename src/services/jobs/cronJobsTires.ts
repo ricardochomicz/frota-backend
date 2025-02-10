@@ -1,9 +1,15 @@
+
+
 import cron from 'node-cron';
+import WebSocket from 'ws';
 import TiresService from '../TiresService';
 
-cron.schedule('0 7 * * *', async () => {
-    console.log('🔍 Verificando desgaste dos pneus...');
-    await TiresService.checkTireWear();
-});
 
-console.log('🚀 Cron job para verificação de pneus iniciado.');
+// Criar um WebSocket Server (ou passar uma instância existente)
+const wss = new WebSocket.Server({ port: 8080 }); // Ajuste a porta se necessário
+
+// Agendar a função para rodar a cada 1 hora
+cron.schedule('0 * * * *', async () => {
+    console.log('⏳ Rodando a verificação de pneus...');
+    await TiresService.checkTireWear(wss);
+});

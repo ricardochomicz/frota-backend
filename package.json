@@ -3,9 +3,10 @@
   "version": "1.0.0",
   "description": "",
   "main": "src/index.js",
+  "type": "commonjs",
   "scripts": {
     "start": "node dist/index.js",
-    "dev": "nodemon src/index.ts",
+    "dev": "nodemon src/index.ts & ts-node src/services/jobs/cronJobsTires.ts",
     "build": "tsc",
     "test": "jest src/tests/*.test.ts"
   },
