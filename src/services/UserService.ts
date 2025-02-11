@@ -18,6 +18,11 @@ class UserService extends BaseService {
         try {
             const hash = await bcrypt.hash(password_hash, 10);
 
+            const existingUser = await UserService.findByEmail(email);
+            if (existingUser) {
+                throw new Error('Email já está em uso');
+            }
+
             const query = 'INSERT INTO users (name, email, password_hash, role, manager_id) VALUES (?, ?, ?, ?, ?)';
 
             const [result]: any = await db.promise().query(query, [name, email, hash, role, manager_id || null]);

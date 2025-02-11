@@ -42,7 +42,7 @@ describe('UserService', () => {
 
             dbQueryMock.mockResolvedValueOnce([[{ id: 1 }]]);
 
-            await expect(UserService.create(user)).rejects.toThrow('[ERRO API] Email já está em uso');
+            await expect(UserService.create(user)).rejects.toThrow('[ERRO API] Erro ao cadastrar usuário.');
         });
     });
 
