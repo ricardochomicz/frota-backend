@@ -4,15 +4,17 @@ services:
     container_name: frota_db
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: frota_db
-      MYSQL_USER: user
-      MYSQL_PASSWORD: root
+      MYSQL_USER: root
+      MYSQL_INITDB_SKIP_TZINFO: "1"
+    command: --innodb-force-recovery=4
     ports:
-      - '3308:3308'
+      - '3306:3306'
     volumes:
       - mysql_data:/var/lib/mysql
-      - ./scripts/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+    networks:
+      - frota_network
 
   backend:
     build: .
@@ -21,16 +23,25 @@ services:
     ports:
       - '5000:5000'
     environment:
-      NODE_ENV: development
-      DB_HOST: db
-      DB_USER: user
-      DB_PASSWORD: password
-      DB_NAME: frota_db
+      - NODE_ENV=development
+      - DB_HOST=${DB_HOST}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - DB_NAME=${DB_NAME}
+      - DB_PORT=3306
+
     volumes:
       - ./src:/app/src # Monta o código fonte no container
     command: npm run dev # Roda o projeto em modo de desenvolvimento
     depends_on:
       - db
+    networks:
+      - frota_network
 
 volumes:
   mysql_data:
+
+
+networks:
+  frota_network:
+    driver: bridge
