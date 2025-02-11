@@ -58,6 +58,9 @@ const server = http.createServer(app);
 // Configura o WebSocket
 const wss = setupWebSocket(server);
 
+app.get('test', (req, res) => {
+    res.send('Hello, World!');
+});
 // Rota para verificação de pneus
 app.get('/api/verify-tires', async (req, res) => {
     try {

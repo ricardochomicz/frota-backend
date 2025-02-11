@@ -32,20 +32,20 @@ class UserService extends BaseService {
      * @param email string
      * busca um usuário pelo email
      */
-    static async findByEmail(email: string): Promise<IUser | null> {
+    static async findByEmail(email: string): Promise<any> {
         try {
-            const [result]: any = await db.promise().query(
+            console.log("Buscando usuário com email:", email);
+            const [user]: any = await db.promise().query(
                 'SELECT * FROM users WHERE email = ?', [email]
             );
-
-            if (result.length === 0) {
-                return null;
-            }
-            return result[0];
+            console.log("Resultado da busca:", user);
+            return user.length > 0 ? user[0] : null;
         } catch (err) {
-            throw new Error('[ERRO API] Erro ao buscar usuário.');
+            console.error("Erro ao buscar usuários:", err);
+            throw new Error("[ERRO API] Erro ao buscar usuários.");
         }
     }
+
 
     /**
      * 

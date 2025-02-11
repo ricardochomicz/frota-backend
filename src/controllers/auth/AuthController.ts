@@ -26,6 +26,7 @@ class AuthController {
             res.status(201).json({ message: 'Usuário criado com sucesso' });
             return;
         } catch (err: any) {
+            console.log(err)
             if (err instanceof z.ZodError) {
                 // Validação falhou
                 res.status(400).json({ error: 'Dados inválidos', details: err.errors });
