@@ -9,10 +9,12 @@ services:
       MYSQL_USER: user
       MYSQL_PASSWORD: root
     ports:
-      - '3308:3308'
+      - '3307:3306'
     volumes:
       - mysql_data:/var/lib/mysql
       - ./scripts/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+    networks:
+      - frota_network
 
   backend:
     build: .
@@ -24,13 +26,21 @@ services:
       NODE_ENV: development
       DB_HOST: db
       DB_USER: user
-      DB_PASSWORD: password
+      DB_PASSWORD: root
       DB_NAME: frota_db
+      DB_PORT: 3306
     volumes:
       - ./src:/app/src # Monta o código fonte no container
     command: npm run dev # Roda o projeto em modo de desenvolvimento
     depends_on:
       - db
+    networks:
+      - frota_network
 
 volumes:
   mysql_data:
+
+
+networks:
+  frota_network:
+    driver: bridge

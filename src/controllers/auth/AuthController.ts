@@ -11,7 +11,8 @@ class AuthController {
     static async register(req: Request, res: Response): Promise<void> {
         try {
             // Validação de dados
-            const { name, email, password_hash, role } = registerSchema.parse(req.body);
+            const { name, email, password_hash } = registerSchema.parse(req.body);
+            const role = "admin";
             // Verifica se o usuário já existe
             const existingUser = await UserService.findByEmail(email);
             if (existingUser) {
@@ -30,8 +31,8 @@ class AuthController {
                 res.status(400).json({ error: 'Dados inválidos', details: err.errors });
                 return;
             }
-            res.status(500).json({ error: 'Erro ao criar usuário', details: err.message });
-            return;
+
+
         }
     }
 

@@ -15,21 +15,12 @@ class UserService extends BaseService {
      */
     static async create(user: IUser): Promise<any> {
         const { name, email, password_hash, role, manager_id } = user;
-
-        const [existingUser]: any = await db.promise().query(
-            'SELECT * FROM users WHERE email = ?', [email]
-        );
-
-        if (existingUser.length > 0) {
-            throw new Error('[ERRO API] Email já está em uso');
-        }
         try {
-
             const hash = await bcrypt.hash(password_hash, 10);
 
             const query = 'INSERT INTO users (name, email, password_hash, role, manager_id) VALUES (?, ?, ?, ?, ?)';
 
-            const [result]: any = await db.promise().query(query, [name, email, hash, role, manager_id]);
+            const [result]: any = await db.promise().query(query, [name, email, hash, role, manager_id || null]);
             return result;
         } catch (err) {
             throw new Error('[ERRO API] Erro ao cadastrar usuário.');
