@@ -5,8 +5,11 @@ import MaintenanceService from "./MaintenanceService";
 
 class VehicleTiresService {
 
-    static async create(vehicleTiresArray: IVehicleTires[]): Promise<IVehicleTires[]> {
-        const query = `INSERT INTO vehicle_tires (vehicle_id, tire_id, installation_date, mileage_at_installation, predicted_replacement_mileage, user_id, maintenance_id) VALUES ?`;
+    static async create(vehicleTiresArray: IVehicleTires[], user_id?: number): Promise<IVehicleTires[]> {
+        const query = `
+            INSERT INTO vehicle_tires (vehicle_id, tire_id, installation_date, mileage_at_installation, predicted_replacement_mileage, user_id, maintenance_id)
+            VALUES ?
+        `;
 
         // Mapeia os valores para inserção
         const values = vehicleTiresArray.map(tire => [
@@ -15,11 +18,12 @@ class VehicleTiresService {
             tire.installation_date,
             tire.mileage_at_installation,
             tire.predicted_replacement_mileage,
-            tire.user_id,
+            user_id,
             tire.maintenance_id
         ]);
 
         try {
+            // Executa a consulta de inserção
             const [result]: any = await db.promise().query(query, [values]);
 
             // Atualiza o status dos pneus após a inserção
@@ -27,15 +31,18 @@ class VehicleTiresService {
                 await this.updateStatusTires(tire.tire_id, 'in use');
             }
 
-            // Retorna o array dos pneus inseridos, adicionando os IDs gerados
-            return vehicleTiresArray.map((tire, i) => ({
+            // Calcula os IDs gerados com base no insertId e quantidade de registros inseridos
+            const insertedTires = vehicleTiresArray.map((tire, i) => ({
                 ...tire,
-                id: result.insertId + i // Garante que cada objeto tem um ID único
+                id: result.insertId + i
             }));
+
+            return insertedTires;
         } catch (error) {
             throw new Error('Erro ao inserir os pneus. Tente novamente mais tarde.');
         }
     }
+
 
     /**
      * Busca todos os pneus de um veículo.

@@ -6,7 +6,6 @@ import TiresService from "../services/TiresService";
 class TiresController {
 
     static async create(req: Request, res: Response): Promise<void> {
-
         try {
             if (!req.user) {
                 res.status(401).json({ error: "Usuário não autenticado" });
@@ -16,11 +15,11 @@ class TiresController {
             const tires = tiresSchema.parse(req.body);
 
             //Verifica se o pneu ja existe
-            const tiresExists = await TiresService.getTiresByCode(tires.code);
-            if (tiresExists) {
-                res.status(400).json({ error: 'Pneu já cadastrado' });
-                return;
-            }
+            // const tiresExists = await TiresService.findByCode(tires.code);
+            // if (tiresExists) {
+            //     res.status(400).json({ error: 'Pneu já cadastrado' });
+            //     return;
+            // }
 
             // Criação do pneu no banco de dados
             const result = await TiresService.create(tires, req.user.userId);
@@ -76,18 +75,27 @@ class TiresController {
         }
     }
 
-    static async getTiresByCode(req: Request, res: Response): Promise<void> {
+    static async getTiresByCode(req: Request, res: Response): Promise<any> {
         try {
             const { code } = req.params;
-            const tire = await TiresService.getTiresByCode(code);
-            if (!tire) {
-                res.status(404).json({ error: 'Pneu não encontrado' }); // Retorne aqui para evitar múltiplas respostas
+
+            if (!code) {
+                return res.status(400).json({ error: "Código do pneu não fornecido." });
             }
-            res.status(200).json({ data: tire }); // Retorne aqui para evitar múltiplas respostas
+
+            const tire = await TiresService.getTiresByCode(code);
+
+            if (!tire) {
+                return res.status(404).json({ error: "Pneu não encontrado." });
+            }
+
+            return res.status(200).json({ data: tire });
         } catch (err: any) {
-            res.status(500).json({ error: `Pneu informado já está em uso em outro veículo ou já foi baixado.` }); // Retorne aqui para evitar múltiplas respostas
+            res.status(400).json({ error: err.message });
         }
     }
+
+
 
     static async update(req: Request, res: Response): Promise<void> {
         try {

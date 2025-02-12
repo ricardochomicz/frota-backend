@@ -4,15 +4,16 @@ import moment from "moment";
 import BaseService from "./BaseService";
 
 const PAGE = 1;
-const LIMIT = 10;
+const LIMIT = 5;
 class MaintenanceService extends BaseService {
 
     static async create(maintenance: IMaintenance, userId?: number) {
         try {
             const date_format = moment().format('YYYY-MM-DD');
+            const status = 'PENDENTE';
             const { vehicle_id, type, description, mileage_at_maintenance } = maintenance;
-            const query = `INSERT INTO maintenance (vehicle_id, type, description, mileage_at_maintenance, date, user_id) VALUES (?, ?, ?, ?, ?, ?)`;
-            const [result]: any = await db.promise().query(query, [vehicle_id, type, description, mileage_at_maintenance, date_format, userId]);
+            const query = `INSERT INTO maintenance (vehicle_id, type, description, mileage_at_maintenance, date, status, user_id) VALUES (?, ?, ?, ?, ?, ?, ?)`;
+            const [result]: any = await db.promise().query(query, [vehicle_id, type, description, mileage_at_maintenance, date_format, status, userId]);
             return { id: result.insertId }
         } catch (error) {
             throw new Error('Erro na requisição. Tente novamente mais tarde.');
@@ -48,10 +49,6 @@ class MaintenanceService extends BaseService {
             LEFT JOIN users u ON u.id = m.user_id
             LEFT JOIN vehicle_tires vt ON vt.maintenance_id = m.id
             WHERE 1=1
-            GROUP BY 
-                m.id, v.id, u.id
-
-            LIMIT 5 OFFSET 0
         `;
 
 
@@ -93,7 +90,10 @@ class MaintenanceService extends BaseService {
         countQuery += userScopeCountQuery;
         queryParams = [...queryParams, ...userScopeParams];
 
-        // query += ` LIMIT ? OFFSET ?`; 
+        query += ` 
+        GROUP BY m.id, v.id, u.id
+        LIMIT ? OFFSET ?
+        `;
         queryParams.push(limit, offset);
 
         try {
@@ -115,7 +115,8 @@ class MaintenanceService extends BaseService {
                     license_plate: maintenance.license_plate,
                     model: maintenance.model,
                     brand: maintenance.brand,
-                    year: maintenance.year
+                    year: maintenance.year,
+                    mileage: maintenance.mileage
                 },
                 data_user: {
                     id: maintenance.user_id,

@@ -38,38 +38,41 @@ class AuthController {
     }
 
     // Login de usuário
-    static async login(req: Request, res: Response): Promise<void> {
+    static async login(req: Request, res: Response): Promise<any> {
         try {
             // Validação de dados
             const { email, password_hash } = loginSchema.parse(req.body);
 
             // Busca o usuário no banco de dados
             const user = await UserService.findByEmail(email);
+
             if (!password_hash) {
-                res.status(400).json({ error: 'Senha é obrigatória' });
+                return res.status(400).json({ error: 'Senha é obrigatória' });
             }
+
             if (!user || !(await bcrypt.compare(password_hash, user.password_hash))) {
-                res.status(401).json({ error: 'Credenciais inválidas' });
+                return res.status(401).json({ error: 'Credenciais inválidas' });
             }
 
             if (!user.id || typeof user.id !== 'number') {
-                res.status(500).json({ error: 'Erro interno: usuário sem ID' });
+                return res.status(500).json({ error: 'Erro interno: usuário sem ID' });
             }
 
             const token = generateToken(user.id, user.role);
 
             // Criar uma cópia do usuário sem o campo password_hash
             const { password_hash: _, ...userWithoutPassword } = user;
-            res.status(200).json({ message: 'Login bem-sucedido', token, user: userWithoutPassword });
+            return res.status(200).json({ message: 'Login bem-sucedido', token, user: userWithoutPassword });
 
         } catch (err: any) {
-            if (err instanceof z.ZodError) {
-                res.status(400).json({ error: '[VALIDAÇÃO] Dados inválidos', details: err.errors });
-            }
-            res.status(500).json({ error: 'Credenciais inválidas', details: err.message });
 
+            if (err instanceof z.ZodError) {
+                return res.status(400).json({ error: '[VALIDAÇÃO] Dados inválidos', details: err.errors });
+            }
+            return res.status(500).json({ error: 'Credenciais inválidas', details: err.message });
         }
     }
+
 
     static async logout(req: Request, res: Response): Promise<void> {
         try {

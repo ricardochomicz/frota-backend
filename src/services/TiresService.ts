@@ -18,15 +18,15 @@ class TiresService extends BaseService {
  */
     static async create(tires: ITires, userId?: number): Promise<{ data: ITires }> {
 
-        const { code, brand, model, price, durability_km } = tires;
+        const { code, brand, model, price, durability_km, status } = tires;
 
-        const query = `INSERT INTO tires (code, brand, model, price, durability_km, user_id) VALUES (?, ?, ?, ?, ?, ?)`;
+        const query = `INSERT INTO tires (code, brand, model, price, durability_km, status, user_id) VALUES (?, ?, ?, ?, ?, ?, ?)`;
 
         try {
-            const [result]: any = await db.promise().query(query, [code, brand, model, price, durability_km, userId]);
+            const [result]: any = await db.promise().query(query, [code, brand, model, price, durability_km, status, userId]);
             return result;
         } catch (error) {
-            throw new Error('Erro ao criar pneus. Tente novamente mais tarde.');
+            throw new Error('[CREATE API]Erro ao criar pneus. Tente novamente mais tarde.');
         }
     }
 
@@ -76,7 +76,7 @@ class TiresService extends BaseService {
             const [rows]: any = await db.promise().query(query, queryParams);
             return { tires: rows, total };
         } catch (error) {
-            throw new Error('Erro ao buscar pneuss. Tente novamente mais tarde.');
+            throw new Error('[GETALL API] Erro ao buscar pneuss. Tente novamente mais tarde.');
         }
     }
 
@@ -94,7 +94,7 @@ class TiresService extends BaseService {
             const [rows]: any = await db.promise().query(query, [id]);
             return rows[0] || null;
         } catch (error) {
-            throw new Error('Erro ao buscar pneu. Tente novamente mais tarde.');
+            throw new Error('[GET API]Erro ao buscar pneu. Tente novamente mais tarde.');
         }
     }
 
@@ -105,28 +105,55 @@ class TiresService extends BaseService {
      * @returns 
      */
     static async getTiresByCode(code: string): Promise<ITires | null> {
-        const checkQuery = `
-            SELECT COUNT(*) AS count, t.code, t.brand, t.model, t.status
-            FROM vehicle_tires vt
-            JOIN tires t ON vt.tire_id = t.id AND vt.to_replace = 0 AND t.status != 'available'
-            WHERE t.code = ?
-        `;
         try {
-            const [checkRows]: any = await db.promise().query(checkQuery, [code]);
+            // 1. Verificar o status do pneu na tabela 'tires'
+            const tireQuery = `SELECT id, status, code, brand, model FROM tires WHERE code = ?`;
+            const [tireRows]: any = await db.promise().query(tireQuery, [code]);
 
-            // Se o pneu estiver associado a algum veículo, não pode ser retornado
-            if (checkRows[0].count > 0 && checkRows[0].status === "in use") {
-                throw new Error('Pneu já está associado a um veículo.');
-            } else if (checkRows[0].status === 'lower') {
-                throw new Error('Pneu já baixado.');
-            } else {
-                const query = `SELECT * FROM tires WHERE code = ?`;
-
-                const [rows]: any = await db.promise().query(query, [code]);
-                return rows[0] || null;
+            if (!tireRows.length) {
+                return null; // Pneu não encontrado
             }
-        } catch (error) {
-            throw new Error('Erro ao buscar pneus. Tente novamente mais tarde.');
+
+            const { id: tireId, status } = tireRows[0];
+
+            // Se o status for 'in use' ou 'lower', retorna erro apropriado
+            if (status === "in use") {
+                throw new Error("Pneu já está associado a um veículo.");
+            } else if (status === "lower") {
+                throw new Error("Pneu já foi baixado.");
+            }
+
+            // 2. Verificar se o pneu ainda está instalado na tabela 'vehicle_tires'
+            const vehicleTireQuery = `
+                SELECT COUNT(*) AS count 
+                FROM vehicle_tires 
+                WHERE tire_id = ? AND to_replace = 0
+            `;
+            const [vehicleTireRows]: any = await db.promise().query(vehicleTireQuery, [tireId]);
+
+            if (vehicleTireRows[0].count > 0) {
+                throw new Error("Pneu ainda está instalado em um veículo.");
+            }
+
+            // 3. Retornar as informações completas do pneu
+            return tireRows[0];
+        } catch (error: any) {
+            console.error("[ERROR] Erro no serviço de pneus:", error.message);
+            throw new Error(error.message);
+        }
+    }
+
+
+
+    static async findByCode(code: string): Promise<any> {
+        try {
+            console.log("Buscando pneu com o código:", code);
+            const [tire]: any = await db.promise().query(
+                'SELECT * FROM tires WHERE code = ?', [code]
+            );
+            return tire.length > 0 ? tire[0] : null;
+        } catch (err) {
+            throw new Error("[ERRO API] Erro ao buscar pneus");
         }
     }
 
