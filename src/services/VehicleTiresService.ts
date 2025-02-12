@@ -5,7 +5,7 @@ import MaintenanceService from "./MaintenanceService";
 
 class VehicleTiresService {
 
-    static async create(vehicleTiresArray: IVehicleTires[], user_id?: number): Promise<IVehicleTires[]> {
+    static async create(vehicleTiresArray: IVehicleTires[]): Promise<IVehicleTires[]> {
         const query = `
             INSERT INTO vehicle_tires (vehicle_id, tire_id, installation_date, mileage_at_installation, predicted_replacement_mileage, user_id, maintenance_id)
             VALUES ?
@@ -18,6 +18,7 @@ class VehicleTiresService {
             tire.installation_date,
             tire.mileage_at_installation,
             tire.predicted_replacement_mileage,
+            tire.user_id,
             tire.maintenance_id
         ]);
 
