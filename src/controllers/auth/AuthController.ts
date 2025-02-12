@@ -24,13 +24,13 @@ class AuthController {
             await UserService.create({ name, email, password_hash, role });
 
             res.status(201).json({ message: 'Usuário criado com sucesso' });
-            return;
+
         } catch (err: any) {
             console.log(err)
             if (err instanceof z.ZodError) {
                 // Validação falhou
                 res.status(400).json({ error: 'Dados inválidos', details: err.errors });
-                return;
+
             }
 
 
@@ -50,12 +50,10 @@ class AuthController {
             }
             if (!user || !(await bcrypt.compare(password_hash, user.password_hash))) {
                 res.status(401).json({ error: 'Credenciais inválidas' });
-                return;
             }
 
             if (!user.id || typeof user.id !== 'number') {
                 res.status(500).json({ error: 'Erro interno: usuário sem ID' });
-                return;
             }
 
             const token = generateToken(user.id, user.role);
@@ -66,11 +64,9 @@ class AuthController {
 
         } catch (err: any) {
             if (err instanceof z.ZodError) {
-                res.status(400).json({ error: 'Dados inválidos', details: err.errors });
-
+                res.status(400).json({ error: '[VALIDAÇÃO] Dados inválidos', details: err.errors });
             }
-            console.error('[ERRO] Falha ao fazer login:', err);
-            res.status(500).json({ error: 'Erro ao fazer login', details: err.message });
+            res.status(500).json({ error: 'Credenciais inválidas', details: err.message });
 
         }
     }

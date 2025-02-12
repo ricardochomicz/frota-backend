@@ -58,7 +58,7 @@ const server = http.createServer(app);
 // Configura o WebSocket
 const wss = setupWebSocket(server);
 
-app.get('test', (req, res) => {
+app.get('/test', (req, res) => {
     res.send('Hello, World!');
 });
 // Rota para verificação de pneus

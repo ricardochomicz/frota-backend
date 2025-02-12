@@ -8,7 +8,7 @@ export interface ITires {
     price: string;
     user_id?: number;
     status?: string;
-    durability_km: number;
+    durability_km?: number;
 }
 
 export interface TireCheckResult extends RowDataPacket {

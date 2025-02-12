@@ -18,12 +18,12 @@ class TiresService extends BaseService {
  */
     static async create(tires: ITires, userId?: number): Promise<{ data: ITires }> {
 
-        const { code, brand, model, price, status, durability_km } = tires;
+        const { code, brand, model, price, durability_km } = tires;
 
-        const query = `INSERT INTO tires (code, brand, model, price, status, durability_km, user_id) VALUES (?, ?, ?, ?, ?, ?, ?)`;
+        const query = `INSERT INTO tires (code, brand, model, price, durability_km, user_id) VALUES (?, ?, ?, ?, ?, ?)`;
 
         try {
-            const [result]: any = await db.promise().query(query, [code, brand, model, price, status, durability_km, userId]);
+            const [result]: any = await db.promise().query(query, [code, brand, model, price, durability_km, userId]);
             return result;
         } catch (error) {
             throw new Error('Erro ao criar pneus. Tente novamente mais tarde.');
@@ -76,7 +76,7 @@ class TiresService extends BaseService {
             const [rows]: any = await db.promise().query(query, queryParams);
             return { tires: rows, total };
         } catch (error) {
-            throw new Error('Erro ao buscar pneus. Tente novamente mais tarde.');
+            throw new Error('Erro ao buscar pneuss. Tente novamente mais tarde.');
         }
     }
 

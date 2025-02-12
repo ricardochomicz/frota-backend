@@ -43,10 +43,8 @@ class UserService extends BaseService {
             const [user]: any = await db.promise().query(
                 'SELECT * FROM users WHERE email = ?', [email]
             );
-            console.log("Resultado da busca:", user);
             return user.length > 0 ? user[0] : null;
         } catch (err) {
-            console.error("Erro ao buscar usuários:", err);
             throw new Error("[ERRO API] Erro ao buscar usuários.");
         }
     }

@@ -1,4 +1,6 @@
--- Tabela de usuários
+CREATE DATABASE IF NOT EXISTS frota_db;
+USE frota_db;
+
 CREATE TABLE IF NOT EXISTS users (
   id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(255) NOT NULL,
@@ -11,7 +13,6 @@ CREATE TABLE IF NOT EXISTS users (
   FOREIGN KEY (manager_id) REFERENCES users(id) ON DELETE SET NULL
 );
 
--- Tabela de veículos
 CREATE TABLE IF NOT EXISTS vehicles (
   id INT AUTO_INCREMENT PRIMARY KEY,
   user_id INT NOT NULL,
@@ -26,7 +27,6 @@ CREATE TABLE IF NOT EXISTS vehicles (
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
--- Tabela de pneus
 CREATE TABLE IF NOT EXISTS tires (
   id INT AUTO_INCREMENT PRIMARY KEY,
   user_id INT NOT NULL,
@@ -41,7 +41,6 @@ CREATE TABLE IF NOT EXISTS tires (
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
--- Tabela de manutenção
 CREATE TABLE IF NOT EXISTS maintenance (
   id INT AUTO_INCREMENT PRIMARY KEY,
   vehicle_id INT NOT NULL,
@@ -76,7 +75,6 @@ CREATE TABLE IF NOT EXISTS vehicle_tires (
   FOREIGN key (maintenance_id) REFERENCES maintenance(id) ON DELETE CASCADE
 );
 
--- Tabela de análise de custos
 CREATE TABLE IF NOT EXISTS cost_analysis (
   id INT AUTO_INCREMENT PRIMARY KEY,
   vehicle_id INT NOT NULL,
