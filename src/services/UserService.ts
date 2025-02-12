@@ -39,7 +39,6 @@ class UserService extends BaseService {
      */
     static async findByEmail(email: string): Promise<any> {
         try {
-            console.log("Buscando usuário com email:", email);
             const [user]: any = await db.promise().query(
                 'SELECT * FROM users WHERE email = ?', [email]
             );

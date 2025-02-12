@@ -18,7 +18,6 @@ class VehicleTiresService {
             tire.installation_date,
             tire.mileage_at_installation,
             tire.predicted_replacement_mileage,
-            user_id,
             tire.maintenance_id
         ]);
 
@@ -189,7 +188,6 @@ class VehicleTiresService {
             const [rows]: any = await db.promise().query(checkQuery, [tire_id]);
 
             if (rows.length === 0) {
-                console.log("⚠️ O pneu não está cadastrado em nenhum veículo.");
                 return false;
             }
 

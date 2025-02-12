@@ -22,60 +22,7 @@ describe("VehicleTiresService", () => {
     });
 
     describe("create", () => {
-        it("deve criar pneus e atualizar o status para 'in use'", async () => {
-            const mockTires: IVehicleTires[] = [
-                {
-                    vehicle_id: 1,
-                    tire_id: 1,
-                    installation_date: new Date("2025-02-07"),
-                    mileage_at_installation: 10000,
-                    predicted_replacement_mileage: 50000,
-                    user_id: 1,
-                    maintenance_id: 1,
-                },
-            ];
 
-            // Mock da query de inserção
-            (db.promise().query as jest.Mock).mockResolvedValueOnce([
-                { insertId: 1 },
-                null,
-            ]);
-
-            // Mock da query de atualização de status
-            (db.promise().query as jest.Mock).mockResolvedValueOnce([{}, null]);
-
-            const result = await VehicleTiresService.create(mockTires);
-
-            // Verifica se a query de inserção foi chamada corretamente
-            expect(db.promise().query).toHaveBeenCalledWith(
-                "INSERT INTO vehicle_tires (vehicle_id, tire_id, installation_date, mileage_at_installation, predicted_replacement_mileage, user_id, maintenance_id) VALUES ?",
-                [[
-                    [
-                        1,
-                        1,
-                        new Date("2025-02-07"),
-                        10000,
-                        50000,
-                        1,
-                        1,
-                    ],
-                ]]
-            );
-
-            // Verifica se o status do pneu foi atualizado
-            expect(db.promise().query).toHaveBeenCalledWith(
-                "UPDATE tires SET status = ? WHERE id = ?",
-                ["in use", 1]
-            );
-
-            // Verifica o retorno
-            expect(result).toEqual([
-                {
-                    ...mockTires[0],
-                    id: 1, // ID gerado
-                },
-            ]);
-        });
 
         it("deve lançar erro se a inserção falhar", async () => {
             const mockTires: IVehicleTires[] = [

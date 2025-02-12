@@ -116,14 +116,14 @@ class TiresService extends BaseService {
 
             const { id: tireId, status } = tireRows[0];
 
-            // Se o status for 'in use' ou 'lower', retorna erro apropriado
+            // Se o status for 'in use' ou 'lower', retorna erro 
             if (status === "in use") {
                 throw new Error("Pneu já está associado a um veículo.");
             } else if (status === "lower") {
                 throw new Error("Pneu já foi baixado.");
             }
 
-            // 2. Verificar se o pneu ainda está instalado na tabela 'vehicle_tires'
+            // Verifica se o pneu ainda está instalado na tabela 'vehicle_tires'
             const vehicleTireQuery = `
                 SELECT COUNT(*) AS count 
                 FROM vehicle_tires 
@@ -135,10 +135,9 @@ class TiresService extends BaseService {
                 throw new Error("Pneu ainda está instalado em um veículo.");
             }
 
-            // 3. Retornar as informações completas do pneu
+            // Retorna as informações completas do pneu
             return tireRows[0];
         } catch (error: any) {
-            console.error("[ERROR] Erro no serviço de pneus:", error.message);
             throw new Error(error.message);
         }
     }
