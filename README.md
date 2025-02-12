@@ -31,9 +31,11 @@ npm install
 
 ## 🔧 Configuração
 - Crie um arquivo `.env` com as seguintes variáveis:
-    - DB_USER=user
-    - DB_PASSWORD=password
+    - DB_HOST=mysql
+    - DB_USER=root
+    - DB_PASSWORD=root
     - DB_NAME=frota_db
+    - DB_PORT=3306
     - PORT=5000
     - NODE_ENV=development
 
