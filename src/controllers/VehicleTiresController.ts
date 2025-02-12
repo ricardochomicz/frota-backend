@@ -23,7 +23,7 @@ class VehicleTiresController {
             }
 
             // Criação dos pneus no banco de dados
-            const result = await VehicleTiresService.create(vehicleTiresArray, req.user.userId);
+            const result = await VehicleTiresService.create(vehicleTiresArray);
 
             return res.status(201).json({ message: 'Pneus adicionados ao veículo com sucesso', data: result });
 
